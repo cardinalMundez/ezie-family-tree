@@ -195,21 +195,18 @@ footer::before { content:'C:\\> '; color:var(--green-dk); }
 
 <div class="terminal-header">
   <h1>EZIE FAMILY TREE<span class="cursor"></span></h1>
-  <p>// Living record of the Ezie lineage &nbsp;|&nbsp; localStorage + Google Sheets sync</p>
+  <p>// Living record of the Ezie lineage &nbsp;|&nbsp; Google Sheets is the single source of truth</p>
 </div>
 
 <!-- SYNC STATUS BAR -->
 <div class="sync-bar">
-  <span class="sync-label">SHEETS SYNC:</span>
+  <span class="sync-label">SHEETS:</span>
   <div class="sync-status">
     <div class="sync-dot local" id="syncDot"></div>
-    <span id="syncMsg">connecting...</span>
+    <span id="syncMsg">loading from database...</span>
   </div>
-  <span class="sep" style="color:var(--green-dk)">|</span>
-  <button class="btn" onclick="testConnection()">[TEST]</button>
-  <button class="btn" onclick="pushToSheets(false)">[PUSH]</button>
-  <button class="btn" onclick="pullFromSheets()">[PULL]</button>
-  <span style="color:var(--grey);font-size:clamp(8px,1.3vw,10px);margin-left:4px">// auto-sync enabled — pushes 5s after each edit</span>
+  <span id="syncTime" style="color:var(--grey);font-size:clamp(8px,1.3vw,10px)"></span>
+  <button class="btn" onclick="refreshFromSheets()" style="margin-left:4px">[↻ REFRESH]</button>
 </div>
 
 <div class="legend">
@@ -220,23 +217,19 @@ footer::before { content:'C:\\> '; color:var(--green-dk); }
 </div>
 
 <div class="toolbar">
-  <span class="toolbar-label">COLLAPSE TO LEVEL:</span>
+  <span class="toolbar-label">VIEW:</span>
   <button class="btn level-btn" onclick="collapseToLevel(1)">[ L1 ]</button>
   <button class="btn level-btn" onclick="collapseToLevel(2)">[ L2 ]</button>
   <button class="btn level-btn" onclick="collapseToLevel(3)">[ L3 ]</button>
   <button class="btn level-btn" onclick="collapseToLevel(4)">[ L4 ]</button>
-  <button class="btn level-btn active" onclick="expandAll()">[ EXPAND ALL ]</button>
-  <span class="sep">|</span>
-  <button class="btn" onclick="exportJSON()">[EXPORT JSON]</button>
-  <button class="btn" onclick="importJSON()">[IMPORT JSON]</button>
-  <button class="btn" onclick="addRootUnion()">[+ ROOT]</button>
+  <button class="btn level-btn active" onclick="expandAll()">[ ALL ]</button>
   <span class="sep">|</span>
   <button class="btn" id="alertsBtn" style="border-color:var(--cyan);color:var(--cyan)" onclick="openSubscribeModal()">[✉ ALERTS]</button>
 </div>
 
 <div id="tree" class="tree"></div>
 
-<footer>All changes auto-saved to localStorage &nbsp;|&nbsp; Use PUSH TO SHEETS to sync to Google &nbsp;|&nbsp; Ezie Family Tree v3.0</footer>
+<footer>Google Sheets is the single source of truth &nbsp;|&nbsp; Changes sync automatically &nbsp;|&nbsp; Ezie Family Tree v4.0</footer>
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
   <div class="modal">
@@ -307,17 +300,158 @@ footer::before { content:'C:\\> '; color:var(--green-dk); }
 
 <script>
 // ================================================================
-// CONFIG — hardcoded URLs
+// CONFIG
 // ================================================================
-const SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbzWJ0xpgOsIyHVmpuqSwwo3otQ_wgDAy-2kQ8OoqHXPqQJhbPuc9N6j0UXRkyGnNzEz/exec';
-let SCRIPT_URL_LIVE = SCRIPT_URL; // after new deployment, update this line only
+const SCRIPT_URL_LIVE = 'https://script.google.com/macros/s/AKfycbzWJ0xpgOsIyHVmpuqSwwo3otQ_wgDAy-2kQ8OoqHXPqQJhbPuc9N6j0UXRkyGnNzEz/exec';
+
+// How long to wait after the last edit before pushing to Sheets (ms)
+const AUTO_SYNC_DELAY = 4000;
 
 // ================================================================
-// DATA MODEL
+// STATE
 // ================================================================
-let familyData = [];
-let nextId = 2000;
-function uid() { return ++nextId; }
+let familyData    = [];
+let nextId        = 2000;
+let autoSyncTimer = null;
+let sheetsLoaded  = false;   // true once we have confirmed Sheets data
+
+function uid(){ return ++nextId; }
+
+// ================================================================
+// SHEETS — SINGLE SOURCE OF TRUTH
+// ================================================================
+
+// Called on page load and by the [↻ REFRESH] button.
+// ALWAYS fetches from Sheets. Never falls back to seed data.
+async function loadFromSheets(silent=false){
+  setSyncStatus('saving','loading...');
+  try {
+    const res  = await fetch(SCRIPT_URL_LIVE + '?action=load&ts=' + Date.now());
+    const json = await res.json();
+
+    if(json.status === 'ok' && json.data){
+      // Normalise: v1 returns array, v2 returns {tree:[...]}
+      const raw = Array.isArray(json.data) ? json.data
+                : (json.data.tree || json.data);
+      familyData  = raw;
+      if(json.nextId) nextId = json.nextId;
+      sheetsLoaded = true;
+
+      // Write-through cache — ONLY so the next load is instant while
+      // the fetch is in-flight. This cache is NEVER used as source of truth.
+      cacheWrite();
+      renderTree();
+      setSyncStatus('ok', 'live ✓');
+      setLastSync();
+      if(!silent) toast('Tree loaded from Google Sheets');
+    } else if(json.data === null){
+      setSyncStatus('warn','sheet empty');
+      toast('No data in Google Sheets yet.','warn');
+    } else {
+      setSyncStatus('error', json.message || 'load error');
+      if(!silent) toast('Load failed: ' + (json.message||'unknown'), 'error');
+    }
+  } catch(e) {
+    setSyncStatus('error','cannot reach Sheets');
+    toast('Cannot reach Google Sheets: ' + e.message, 'error');
+  }
+}
+
+// Public [↻ REFRESH] button handler
+function refreshFromSheets(){
+  loadFromSheets(false);
+}
+
+// Push current in-memory state to Sheets.
+// Called automatically after every edit (debounced).
+async function pushToSheets(auto=false){
+  // Guard: never push if we never successfully loaded from Sheets first.
+  // This prevents a browser with no data from overwriting the database.
+  if(!sheetsLoaded){
+    console.warn('pushToSheets blocked — Sheets not yet loaded on this session');
+    return;
+  }
+  setSyncStatus('saving', auto ? 'saving...' : 'pushing...');
+  try {
+    const res  = await fetch(SCRIPT_URL_LIVE, {
+      method:  'POST',
+      body:    JSON.stringify({ action:'save', data:familyData, nextId, savedBy: auto ? 'auto-sync' : 'manual' }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const json = await res.json();
+    if(json.status === 'ok'){
+      setSyncStatus('ok', 'saved ✓');
+      setLastSync();
+      cacheWrite(); // keep cache fresh
+      if(!auto) toast('Saved to Google Sheets (' + json.rowCount + ' nodes)');
+    } else {
+      setSyncStatus('error', json.message);
+      toast('Save failed: ' + json.message, 'error');
+    }
+  } catch(e) {
+    setSyncStatus('error','save failed');
+    toast('Save failed — check connection', 'error');
+  }
+}
+
+// ================================================================
+// WRITE-THROUGH CACHE
+// Used ONLY to pre-populate while the Sheets fetch is in-flight on reload.
+// The fetch always overwrites whatever is cached.
+// The seed() function is NEVER called — stale hardcoded data can never
+// enter the system.
+// ================================================================
+const CACHE_KEY = 'ezie_cache_v5';
+
+function cacheWrite(){
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data: familyData, nextId }));
+  } catch(e) {}
+}
+
+function cacheRead(){
+  try {
+    const r = localStorage.getItem(CACHE_KEY);
+    if(r){
+      const d = JSON.parse(r);
+      if(d && Array.isArray(d.data) && d.data.length > 0){
+        familyData = d.data;
+        nextId     = d.nextId || 2000;
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
+// ================================================================
+// AUTO-SYNC — debounced push after every edit
+// ================================================================
+function scheduleAutoSync(){
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(() => pushToSheets(true), AUTO_SYNC_DELAY);
+}
+
+// Called by every edit action (save, delete, add child, add spouse, etc.)
+function afterEdit(){
+  cacheWrite();   // instant local cache update
+  renderTree();   // instant UI update
+  scheduleAutoSync(); // push to Sheets after debounce
+}
+
+// ================================================================
+// SYNC STATUS UI
+// ================================================================
+function setSyncStatus(state, msg){
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncMsg');
+  if(dot) dot.className = 'sync-dot ' + state;
+  if(txt) txt.textContent = msg;
+}
+function setLastSync(){
+  const el = document.getElementById('syncTime');
+  if(el) el.textContent = 'last sync ' + new Date().toLocaleTimeString();
+}
 
 function spouseLabel(g) {
   if (g==='m') return 'and wife';
@@ -431,107 +565,6 @@ function seed(){
     ],2),
   ],1),
   ];
-}
-
-// ================================================================
-// LOCAL STORAGE
-// ================================================================
-function localSave(){
-  try{localStorage.setItem('ezie_v4',JSON.stringify({data:familyData,nextId}));}catch(e){}
-}
-function localLoad(){
-  try{
-    const r=localStorage.getItem('ezie_v4');
-    if(r){const d=JSON.parse(r);familyData=d.data;nextId=d.nextId||2000;return true;}
-  }catch(e){}
-  return false;
-}
-
-// ================================================================
-// SYNC — GOOGLE SHEETS (URL hardcoded — no input needed)
-// ================================================================
-function setSyncStatus(state, msg){
-  const dot = document.getElementById('syncDot');
-  const txt = document.getElementById('syncMsg');
-  if(dot) dot.className = 'sync-dot ' + state;
-  if(txt) txt.textContent = msg;
-}
-
-async function testConnection(){
-  setSyncStatus('saving','testing...');
-  try{
-    const res = await fetch(SCRIPT_URL_LIVE,{method:'POST',
-      body:JSON.stringify({action:'ping',data:null,nextId,savedBy:'test'}),
-      headers:{'Content-Type':'text/plain'}
-    });
-    const json = await res.json();
-    if(json.status==='ok'){
-      setSyncStatus('ok','connected ✓ '+json.timestamp?.substring(0,10));
-      toast('Connection successful!');
-    } else {
-      setSyncStatus('error','error: '+json.message);
-      toast('Error: '+json.message,'error');
-    }
-  }catch(e){
-    setSyncStatus('error','failed');
-    toast('Connection failed.','error');
-  }
-}
-
-async function pushToSheets(auto=false){
-  setSyncStatus('saving', auto?'auto-syncing...':'pushing...');
-  try{
-    const res = await fetch(SCRIPT_URL_LIVE,{
-      method:'POST',
-      body:JSON.stringify({action:'save',data:familyData,nextId,savedBy:auto?'auto-sync':'manual'}),
-      headers:{'Content-Type':'text/plain'}
-    });
-    const json = await res.json();
-    if(json.status==='ok'){
-      setSyncStatus('ok','synced ✓ '+new Date().toLocaleTimeString());
-      if(!auto) toast('✓ Pushed to Google Sheets ('+json.rowCount+' nodes)');
-    } else {
-      setSyncStatus('error',json.message);
-      toast('Push failed: '+json.message,'error');
-    }
-  }catch(e){
-    setSyncStatus('warn','sync failed — local only');
-    if(!auto) toast('Push failed: '+e.message,'error');
-  }
-}
-
-async function pullFromSheets(){
-  if(!confirm('Pull from Google Sheets? This will REPLACE your current local data.')) return;
-  setSyncStatus('saving','pulling...');
-  try{
-    const res = await fetch(SCRIPT_URL_LIVE+'?action=load&ts='+Date.now());
-    const json = await res.json();
-    if(json.status==='ok' && json.data){
-      familyData = json.data;
-      // handle both v1 (array) and v2 (object with .tree)
-      if(!Array.isArray(familyData) && familyData.tree) familyData = familyData.tree;
-      if(json.nextId) nextId = json.nextId;
-      localSave(); renderTree();
-      setSyncStatus('ok','pulled ✓ '+new Date().toLocaleTimeString());
-      toast('✓ Pulled from Google Sheets');
-    } else if(json.data===null){
-      setSyncStatus('ok','sheet empty');
-      toast('Sheet has no data yet. Push first.','warn');
-    } else {
-      setSyncStatus('error',json.message);
-      toast('Pull failed: '+json.message,'error');
-    }
-  }catch(e){
-    setSyncStatus('error','pull failed');
-    toast('Pull failed: '+e.message,'error');
-  }
-}
-
-// Auto-sync debounce
-let autoSyncTimer=null;
-function scheduleAutoSync(){
-  clearTimeout(autoSyncTimer);
-  autoSyncTimer=setTimeout(()=>pushToSheets(true), 5000);
 }
 
 // ================================================================
@@ -703,14 +736,14 @@ function editUnion(id){
   const u=findU(id,familyData);if(!u)return;
   openModal('EDIT: '+dn(u.member).toUpperCase(),
     pForm(u.member,'em_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteUnion(${id})">[DEL]</button><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[SAVE]</button></div>`,
-    ()=>{readForm(u.member,'em_');localSave();renderTree();closeModal();toast('Saved');scheduleAutoSync();});
+    ()=>{ readForm(u.member,'em_'); closeModal(); toast('Saved'); afterEdit(); });
 }
 function deleteUnion(id){
   if(!confirm('Delete this person and all their descendants?'))return;
   const pa=findPA(id,familyData);
   if(pa){const i=pa.findIndex(u=>u.id===id);if(i!==-1)pa.splice(i,1);}
   else{const i=familyData.findIndex(u=>u.id===id);if(i!==-1)familyData.splice(i,1);}
-  localSave();renderTree();closeModal();toast('Deleted');scheduleAutoSync();
+  closeModal(); toast('Deleted'); afterEdit();
 }
 
 // ================================================================
@@ -732,23 +765,23 @@ function editSpouse(uid2,sid){
   const sp=u.spouses.find(s=>s.id===sid);if(!sp)return;
   openModal('EDIT SPOUSE: '+dn(sp).toUpperCase(),
     spForm(sp,'sp_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteSpouse(${uid2},${sid})">[REMOVE]</button><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[SAVE]</button></div>`,
-    ()=>{readForm(sp,'sp_');readSpouseExtra(sp,'sp_');localSave();renderTree();closeModal();toast('Spouse saved');scheduleAutoSync();});
+    ()=>{ readForm(sp,'sp_'); readSpouseExtra(sp,'sp_'); closeModal(); toast('Spouse saved'); afterEdit(); });
 }
 function deleteSpouse(uid2,sid){
   if(!confirm('Remove spouse?'))return;
   const u=findU(uid2,familyData);if(u)u.spouses=u.spouses.filter(s=>s.id!==sid);
-  localSave();renderTree();closeModal();toast('Spouse removed');scheduleAutoSync();
+  closeModal(); toast('Spouse removed'); afterEdit();
 }
 function addSpouse(uid2){
   const u=findU(uid2,familyData);if(!u)return;
   const sp={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:'',marriageYear:'',marriageDate:''};
   openModal('ADD SPOUSE TO: '+dn(u.member).toUpperCase(),
     spForm(sp,'ns_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
-    ()=>{readForm(sp,'ns_');readSpouseExtra(sp,'ns_');if(!sp.firstName&&!sp.lastName){alert('Enter a name.');return;}u.spouses.push(sp);localSave();renderTree();closeModal();toast('Spouse added');scheduleAutoSync();});
+    ()=>{ readForm(sp,'ns_'); readSpouseExtra(sp,'ns_'); if(!sp.firstName&&!sp.lastName){alert('Enter a name.');return;} u.spouses.push(sp); closeModal(); toast('Spouse added'); afterEdit(); });
 }
 
 // ================================================================
-// ADD CHILD / ROOT
+// ADD CHILD
 // ================================================================
 function addChild(pid){
   const parent=findU(pid,familyData);if(!parent)return;
@@ -756,39 +789,30 @@ function addChild(pid){
   const m={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:''};
   openModal('ADD CHILD UNDER: '+dn(parent.member).toUpperCase(),
     pForm(m,'nc_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
-    ()=>{readForm(m,'nc_');if(!m.firstName){alert('Enter a first name.');return;}parent.children.push({id:uid(),member:m,spouses:[],children:[],level:lvl});localSave();renderTree();closeModal();toast('Child added');scheduleAutoSync();});
-}
-function addRootUnion(){
-  const m={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:''};
-  openModal('ADD ROOT FAMILY MEMBER',
-    pForm(m,'nr_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
-    ()=>{readForm(m,'nr_');if(!m.firstName){alert('Enter a first name.');return;}familyData.push({id:uid(),member:m,spouses:[],children:[],level:1});localSave();renderTree();closeModal();toast('Root added');scheduleAutoSync();});
+    ()=>{ readForm(m,'nc_'); if(!m.firstName){alert('Enter a first name.');return;} parent.children.push({id:uid(),member:m,spouses:[],children:[],level:lvl}); closeModal(); toast('Child added'); afterEdit(); });
 }
 
 // ================================================================
-// EXPORT / IMPORT JSON
+// INIT — Sheets is the ONLY source of truth.
+// On load: show cached tree instantly if available (so page isn't blank),
+// then immediately fetch from Sheets and overwrite with the real data.
+// The seed() function exists only for the Apps Script to reference if
+// needed — it is NEVER called here.
 // ================================================================
-function exportJSON(){
-  const b=new Blob([JSON.stringify({data:familyData,nextId},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ezie-family-tree.json';a.click();
-  toast('JSON exported');
-}
-function importJSON(){
-  const inp=document.createElement('input');inp.type='file';inp.accept='.json';
-  inp.onchange=e=>{
-    const f=e.target.files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.data){familyData=d.data;nextId=d.nextId||9999;localSave();renderTree();toast('JSON imported');scheduleAutoSync();}else alert('Invalid format.');}catch(err){alert('Invalid JSON.');}};
-    r.readAsText(f);
-  };inp.click();
-}
+(async function init(){
+  // Step 1: if we have a warm cache, render it immediately so the page
+  // isn't blank while the fetch is in-flight. This is purely cosmetic.
+  if(cacheRead() && familyData.length > 0){
+    renderTree();
+    setSyncStatus('saving','refreshing from database...');
+  } else {
+    setSyncStatus('saving','loading from database...');
+  }
 
-// ================================================================
-// INIT
-// ================================================================
-if(!localLoad()){seed();localSave();}
-setSyncStatus('local','ready — will auto-sync on changes');
-renderTree();
+  // Step 2: ALWAYS fetch the real data from Sheets.
+  // This overwrites anything rendered from cache.
+  await loadFromSheets(true);
+})();
 
 // ================================================================
 // SUBSCRIBE MODAL
