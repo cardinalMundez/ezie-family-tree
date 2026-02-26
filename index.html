@@ -14,12 +14,13 @@
   --green-dim: #1a9c1a;
   --green-dk:  #0f5a0f;
   --yellow:    #ffff00;
+  --yellow-dim:#cccc00;
   --white:     #e8ffe8;
   --grey:      #4a6a4a;
   --red:       #ff4444;
   --cyan:      #00ffcc;
   --orange:    #ff9900;
-  --scanline:  rgba(0,0,0,0.15);
+  --scanline:  rgba(0,0,0,0.18);
   --font:      'Share Tech Mono', 'Courier New', monospace;
   --font-hdr:  'VT323', monospace;
 }
@@ -29,383 +30,300 @@ body {
   background: var(--bg); color: var(--green);
   font-family: var(--font); font-size: clamp(11px, 2vw, 14px);
   line-height: 1.5; min-height: 100vh; overflow-x: hidden;
-  background-image: repeating-linear-gradient(
-    0deg, var(--scanline) 0px, var(--scanline) 1px,
-    transparent 1px, transparent 3px);
+  background-image: repeating-linear-gradient(0deg, var(--scanline) 0px, var(--scanline) 1px, transparent 1px, transparent 3px);
   background-attachment: fixed;
 }
-@keyframes flicker {
-  0%,100%{opacity:1} 91%{opacity:1} 92%{opacity:.97}
-  93%{opacity:1} 95%{opacity:.98} 96%{opacity:1}
-}
-body { animation: flicker 9s infinite; }
-
-/* ═══════════════════════════════════════
-   BOOT SCREEN
-═══════════════════════════════════════ */
-#boot {
-  position: fixed; inset: 0; background: var(--bg);
-  z-index: 9999; display: flex; flex-direction: column;
-  justify-content: center; align-items: flex-start;
-  padding: clamp(20px,5vw,60px);
-  font-family: var(--font); font-size: clamp(11px,1.8vw,14px);
-  overflow: hidden;
-}
-#boot.done { display: none; }
-.boot-line {
-  color: var(--green-dim); line-height: 1.8;
-  opacity: 0; white-space: nowrap;
-  overflow: hidden; max-width: 100%;
-}
-.boot-line.vis  { opacity: 1; }
-.boot-line.yellow { color: var(--yellow); }
-.boot-line.cyan   { color: var(--cyan); }
-.boot-line.white  { color: var(--white); }
-.boot-line.blank  { height: 0.6em; opacity: 1; }
-.boot-bar {
-  display: inline-block; height: 10px; background: var(--green-dk);
-  width: 0; transition: width 0.8s linear;
-  vertical-align: middle; margin-left: 8px;
-}
-.boot-bar.full { width: clamp(120px,25vw,280px); background: var(--green); }
-
-/* ═══════════════════════════════════════
-   MAIN LAYOUT
-═══════════════════════════════════════ */
-#app { display: none; }
-#app.ready { display: block; }
+@keyframes flicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:.97} 94%{opacity:1} 96%{opacity:.98} 97%{opacity:1} }
+body { animation: flicker 8s infinite; }
 
 /* ── HEADER ── */
-.hdr {
+.terminal-header {
   border-bottom: 1px solid var(--green-dim);
-  padding: clamp(8px,2vw,14px) clamp(10px,3vw,22px) clamp(6px,1.5vw,10px);
+  padding: clamp(8px,2vw,16px) clamp(10px,3vw,20px);
+  margin-bottom: 0;
 }
-.hdr-path { color: var(--grey); font-size: clamp(8px,1.4vw,11px); letter-spacing:.07em; margin-bottom:3px; }
-.hdr h1 {
-  font-family: var(--font-hdr); font-size: clamp(26px,7vw,58px);
-  color: var(--yellow); letter-spacing:.06em; line-height:1;
-  text-shadow: 0 0 18px rgba(255,255,0,.35), 0 0 50px rgba(255,255,0,.12);
+.terminal-header::before {
+  content: 'C:\\EZIE\\FAMILY_TREE.EXE';
+  display: block; color: var(--grey);
+  font-size: clamp(8px,1.5vw,11px); margin-bottom: 4px; letter-spacing: 0.08em;
 }
-.hdr-sub { color: var(--green-dim); font-size: clamp(8px,1.5vw,11px); margin-top:3px; }
+.terminal-header h1 {
+  font-family: var(--font-hdr); font-size: clamp(22px,6vw,52px);
+  color: var(--yellow); letter-spacing: 0.06em; line-height: 1;
+  text-shadow: 0 0 18px rgba(255,255,0,0.4), 0 0 40px rgba(255,255,0,0.15);
+}
+.terminal-header p { color: var(--green-dim); font-size: clamp(9px,1.6vw,12px); margin-top: 4px; }
+.cursor { display:inline-block; width:clamp(8px,1.5vw,12px); height:1.1em; background:var(--cursor,var(--green)); vertical-align:bottom; margin-left:3px; animation:blink 1.1s step-start infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-.cursor {
-  display:inline-block; width:clamp(8px,1.4vw,11px); height:.95em;
-  background:var(--green); vertical-align:bottom; margin-left:2px;
-  animation: blink 1.1s step-start infinite;
-}
 
-/* ── STATUS BAR ── */
-.status-bar {
-  display: flex; align-items: center; flex-wrap: wrap;
-  gap: clamp(4px,1vw,8px);
-  padding: clamp(4px,1vw,7px) clamp(10px,3vw,22px);
-  background: rgba(0,255,51,0.03);
-  border-bottom: 1px solid var(--green-dk);
+/* ── SYNC BAR ── */
+.sync-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: clamp(4px,1vw,8px);
+  padding: clamp(5px,1.2vw,9px) clamp(10px,3vw,20px);
+  background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--green-dk);
   font-size: clamp(8px,1.4vw,11px);
 }
-.sb-section { display:flex; align-items:center; gap:5px; }
-.sb-label { color: var(--grey); white-space:nowrap; }
-.sb-dot {
-  width:7px; height:7px; border-radius:50%;
-  flex-shrink:0; background:var(--grey);
-  transition: background .3s, box-shadow .3s;
+.sync-label { color: var(--grey); letter-spacing: 0.06em; margin-right: 2px; }
+.sync-status {
+  display: flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border: 1px solid var(--green-dk);
+  font-size: clamp(8px,1.4vw,11px); min-width: 160px;
 }
-.sb-dot.ok     { background:var(--green);  box-shadow:0 0 6px var(--green); }
-.sb-dot.busy   { background:var(--yellow); box-shadow:0 0 6px var(--yellow); animation:pulse .5s ease-in-out infinite alternate; }
-.sb-dot.err    { background:var(--red);    box-shadow:0 0 6px var(--red); }
-.sb-dot.warn   { background:var(--orange); box-shadow:0 0 5px var(--orange); }
-@keyframes pulse { from{opacity:.4} to{opacity:1} }
-.sb-text { color: var(--green-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:clamp(120px,25vw,340px); }
-.sb-divider { color: var(--green-dk); padding: 0 3px; }
-.sb-nodes { color: var(--grey); }
+.sync-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--grey); }
+.sync-dot.ok     { background:var(--green); box-shadow:0 0 6px var(--green); }
+.sync-dot.saving { background:var(--yellow); box-shadow:0 0 6px var(--yellow); animation:pulse .6s ease-in-out infinite alternate; }
+.sync-dot.error  { background:var(--red); box-shadow:0 0 6px var(--red); }
+.sync-dot.local  { background:var(--grey); }
+@keyframes pulse { from{opacity:0.5} to{opacity:1} }
+#syncMsg { color: var(--green-dim); }
+
+
 
 /* ── TOOLBAR ── */
 .toolbar {
-  display:flex; flex-wrap:wrap; gap:clamp(3px,0.8vw,6px);
-  padding: clamp(5px,1.2vw,9px) clamp(10px,3vw,22px);
-  border-bottom: 1px solid var(--green-dk);
+  display:flex; flex-wrap:wrap; gap:clamp(4px,1vw,8px);
+  padding:clamp(6px,1.5vw,10px) clamp(10px,3vw,20px);
+  border-bottom:1px solid var(--green-dk); margin-bottom:clamp(8px,2vw,14px);
   align-items:center;
 }
-.tb-label { color:var(--grey); font-size:clamp(8px,1.3vw,10px); letter-spacing:.06em; margin-right:2px; white-space:nowrap; }
+.toolbar-label { color:var(--grey); font-size:clamp(8px,1.4vw,11px); letter-spacing:0.06em; margin-right:4px; }
 .btn {
   background:var(--bg3); border:1px solid var(--green-dim); color:var(--white);
-  font-family:var(--font); font-size:clamp(8px,1.4vw,11px);
-  padding:clamp(2px,.4vw,3px) clamp(5px,1.2vw,10px);
-  cursor:pointer; letter-spacing:.04em; white-space:nowrap;
-  transition:background .1s, color .1s, border-color .1s;
+  font-family:var(--font); font-size:clamp(9px,1.5vw,12px);
+  padding:clamp(2px,0.5vw,4px) clamp(6px,1.5vw,12px);
+  cursor:pointer; letter-spacing:0.04em; transition:background 0.1s,color 0.1s,border-color 0.1s; white-space:nowrap;
 }
 .btn:hover { background:var(--green-dk); color:var(--yellow); border-color:var(--yellow); }
-.btn.lv { border-color:var(--grey); color:var(--grey); }
-.btn.lv:hover { border-color:var(--green); color:var(--green); background:var(--green-dk); }
-.btn.lv.on { border-color:var(--cyan); color:var(--cyan); background:rgba(0,255,204,.07); }
-.btn.sync-btn { border-color:var(--cyan); color:var(--cyan); }
-.btn.sync-btn:hover { background:rgba(0,255,204,.12); border-color:var(--cyan); }
-.sep { color:var(--green-dk); padding:0 3px; font-size:clamp(10px,1.8vw,13px); }
+.btn.level-btn { border-color:var(--grey); color:var(--grey); }
+.btn.level-btn:hover { border-color:var(--green); color:var(--green); background:var(--green-dk); }
+.btn.level-btn.active { border-color:var(--cyan); color:var(--cyan); background:rgba(0,255,204,0.08); }
+.sep { color:var(--green-dk); padding:0 4px; }
 
 /* ── LEGEND ── */
 .legend {
-  display:flex; flex-wrap:wrap; gap:clamp(8px,2vw,18px);
-  padding:clamp(4px,1vw,7px) clamp(10px,3vw,22px);
+  display:flex; flex-wrap:wrap; gap:clamp(8px,2vw,16px);
+  padding:clamp(4px,1vw,8px) clamp(10px,3vw,20px);
   border-bottom:1px solid var(--green-dk);
-  font-size:clamp(8px,1.4vw,11px);
+  font-size:clamp(8px,1.5vw,11px);
 }
-.leg { display:flex; align-items:center; gap:4px; }
-.leg-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.leg { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .leg span { color:var(--grey); }
 
 /* ── TREE ── */
-.tree { padding:clamp(6px,2vw,14px) clamp(8px,2.5vw,20px); }
-.u-block { margin-bottom:1px; }
-.u-row { display:flex; align-items:flex-start; }
-.u-pipes { flex-shrink:0; color:var(--green-dk); white-space:pre; line-height:1.5; user-select:none; }
+.tree { padding:clamp(6px,2vw,14px) clamp(10px,3vw,20px); }
+.u-block { margin-bottom: 2px; }
+.u-row { display:flex; align-items:flex-start; gap:0; }
+.u-pipes { flex-shrink:0; color:var(--green-dim); white-space:pre; font-size:clamp(11px,2vw,14px); line-height:1.5; user-select:none; padding-top:1px; }
 .u-content { flex:1; min-width:0; }
-.u-toggle {
-  background:none; border:none; color:var(--white);
-  font-family:var(--font); font-size:clamp(11px,2vw,14px);
-  cursor:pointer; padding:0 4px 0 0; line-height:1.5;
-  transition:color .1s; user-select:none;
-}
+.u-toggle { display:inline-block; background:none; border:none; color:var(--white); font-family:var(--font); font-size:clamp(11px,2vw,14px); cursor:pointer; padding:0 4px 0 0; line-height:1.5; flex-shrink:0; transition:color 0.1s; user-select:none; }
 .u-toggle:hover { color:var(--yellow); }
 .u-toggle.leaf { color:var(--green-dk); cursor:default; }
-.u-member {
-  color:var(--yellow); display:inline;
-  font-size:clamp(11px,2vw,14px);
-  text-shadow:0 0 8px rgba(255,255,0,.2);
-}
+.u-member { color:var(--yellow); font-size:clamp(11px,2vw,14px); display:inline; text-shadow:0 0 8px rgba(255,255,0,0.25); }
 .u-member.late::after { content:' †'; color:var(--grey); font-size:.85em; }
-.u-dates { color:var(--grey); font-size:clamp(8px,1.5vw,11px); margin-left:4px; }
-.u-spouse-line {
-  color:var(--green-dim); font-size:clamp(9px,1.7vw,12px);
-  margin-left:clamp(12px,2.5vw,20px); display:flex;
-  align-items:center; flex-wrap:wrap; gap:3px;
-}
-.u-slabel { color:var(--grey); }
-.u-sname  { color:var(--green); }
-.u-note { color:var(--grey); font-size:clamp(8px,1.3vw,10px); margin-left:clamp(12px,2.5vw,20px); font-style:italic; }
-.u-actions {
-  display:inline-flex; gap:3px; margin-left:6px;
-  opacity:0; transition:opacity .15s; vertical-align:middle;
-}
-.u-content:hover .u-actions,
-.u-content:focus-within .u-actions { opacity:1; }
+.u-dates { color:var(--grey); font-size:clamp(9px,1.5vw,11px); margin-left:4px; }
+.u-spouse-line { color:var(--green-dim); font-size:clamp(10px,1.8vw,13px); margin-left:clamp(14px,3vw,22px); display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
+.u-spouse-label { color:var(--grey); }
+.u-spouse-name  { color:var(--green); }
+.u-note { color:var(--grey); font-size:clamp(8px,1.4vw,11px); margin-left:clamp(14px,3vw,22px); font-style:italic; }
+.u-actions { display:inline-flex; gap:3px; margin-left:8px; opacity:0; transition:opacity 0.15s; vertical-align:middle; }
+.u-content:hover .u-actions, .u-content:focus-within .u-actions { opacity:1; }
 @media (max-width:520px) { .u-actions { opacity:1; } }
-.ab {
-  background:none; border:1px solid var(--green-dk); color:var(--green-dim);
-  font-family:var(--font); font-size:clamp(7px,1.2vw,10px);
-  padding:0 4px; cursor:pointer; line-height:1.65;
-  transition:color .1s, border-color .1s; white-space:nowrap;
-}
-.ab:hover { color:var(--yellow); border-color:var(--yellow); }
-.ab.del:hover { color:var(--red); border-color:var(--red); }
-.u-children { }
+.act-btn { background:none; border:1px solid var(--green-dk); color:var(--green-dim); font-family:var(--font); font-size:clamp(8px,1.3vw,10px); padding:0px 4px; cursor:pointer; transition:color 0.1s,border-color 0.1s; white-space:nowrap; line-height:1.6; }
+.act-btn:hover { color:var(--yellow); border-color:var(--yellow); }
+.act-btn.danger:hover { color:var(--red); border-color:var(--red); }
+.u-children { overflow:hidden; }
 .u-children.collapsed { display:none; }
 
-/* Section headers */
-.s-head {
-  color:var(--cyan); font-size:clamp(9px,1.8vw,13px);
-  letter-spacing:.06em;
-  padding:clamp(8px,1.5vw,12px) 0 clamp(4px,1vw,6px);
-  border-top:1px solid var(--green-dk);
-  margin-top:clamp(6px,1.5vw,10px);
-}
-.s-head::before { content:'>> '; color:var(--green-dim); }
+.section-head { color:var(--cyan); font-size:clamp(10px,2vw,13px); letter-spacing:0.06em; padding:clamp(8px,1.5vw,12px) 0 clamp(4px,1vw,6px); border-top:1px solid var(--green-dk); margin-top:clamp(6px,1.5vw,12px); display:flex; align-items:center; gap:8px; }
+.section-head::before { content:'>> '; color:var(--green-dim); }
 
 /* ── MODAL ── */
-.mo { position:fixed; inset:0; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; }
-.mo.on { display:flex; }
-.mo-box {
-  background:var(--bg2); border:1px solid var(--green-dim);
-  box-shadow:0 0 30px rgba(51,255,51,.14), 0 0 80px rgba(51,255,51,.05);
-  padding:clamp(14px,3vw,24px); width:100%; max-width:490px;
-  max-height:90vh; overflow-y:auto;
-}
-.mo-title {
-  font-family:var(--font-hdr); font-size:clamp(16px,4vw,28px);
-  color:var(--yellow); margin-bottom:14px; padding-bottom:8px;
-  border-bottom:1px solid var(--green-dk); letter-spacing:.06em;
-}
-.mo-title::before { content:'> '; color:var(--green-dim); }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+.modal-overlay.active { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--green-dim); box-shadow:0 0 30px rgba(51,255,51,0.15),0 0 80px rgba(51,255,51,0.05); padding:clamp(14px,3vw,24px); width:100%; max-width:480px; max-height:90vh; overflow-y:auto; font-family:var(--font); }
+.modal-title { font-family:var(--font-hdr); font-size:clamp(16px,4vw,28px); color:var(--yellow); margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--green-dk); letter-spacing:0.06em; }
+.modal-title::before { content:'> '; color:var(--green-dim); }
 .fg { margin-bottom:10px; }
-.fg label { display:block; color:var(--grey); font-size:clamp(8px,1.3vw,10px); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
+.fg label { display:block; color:var(--grey); font-size:clamp(8px,1.4vw,10px); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:3px; }
 .fg label::before { content:'# '; color:var(--green-dk); }
-.fg input,.fg select,.fg textarea {
-  width:100%; background:var(--bg3); border:1px solid var(--green-dk);
-  color:var(--green); font-family:var(--font); font-size:clamp(10px,1.7vw,13px);
-  padding:5px 8px; outline:none; border-radius:0; -webkit-appearance:none;
-  transition:border-color .15s;
-}
-.fg input:focus,.fg select:focus,.fg textarea:focus { border-color:var(--green); box-shadow:0 0 6px rgba(51,255,51,.18); }
+.fg input,.fg select,.fg textarea { width:100%; background:var(--bg3); border:1px solid var(--green-dk); color:var(--green); font-family:var(--font); font-size:clamp(10px,1.8vw,13px); padding:5px 8px; outline:none; transition:border-color 0.15s; border-radius:0; -webkit-appearance:none; }
+.fg input:focus,.fg select:focus,.fg textarea:focus { border-color:var(--green); box-shadow:0 0 6px rgba(51,255,51,0.2); }
 .fg select option { background:var(--bg3); }
-.fg textarea { resize:vertical; min-height:52px; }
-.fg-hint { font-size:clamp(7px,1.1vw,9px); color:var(--grey); margin-top:3px; }
+.fg textarea { resize:vertical; min-height:54px; }
+.fg-hint { font-size:clamp(7px,1.2vw,9px); color:var(--grey); margin-top:3px; }
 .fg-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.mo-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:14px; padding-top:10px; border-top:1px solid var(--green-dk); flex-wrap:wrap; }
-.mb { background:var(--bg3); border:1px solid var(--green-dim); color:var(--green); font-family:var(--font); font-size:clamp(9px,1.5vw,12px); padding:5px 14px; cursor:pointer; letter-spacing:.04em; transition:all .1s; }
-.mb:hover { background:var(--green-dk); color:var(--yellow); border-color:var(--yellow); }
-.mb.ok  { border-color:var(--yellow); color:var(--yellow); }
-.mb.ok:hover  { background:rgba(255,255,0,.14); }
-.mb.bad { border-color:var(--red); color:var(--red); margin-right:auto; }
-.mb.bad:hover { background:rgba(255,68,68,.14); }
-.mb.no  { border-color:var(--grey); color:var(--grey); }
+.modal-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:14px; padding-top:10px; border-top:1px solid var(--green-dk); flex-wrap:wrap; }
+.mbtn { background:var(--bg3); border:1px solid var(--green-dim); color:var(--green); font-family:var(--font); font-size:clamp(9px,1.6vw,12px); padding:5px 14px; cursor:pointer; letter-spacing:0.04em; transition:all 0.1s; }
+.mbtn:hover { background:var(--green-dk); color:var(--yellow); border-color:var(--yellow); }
+.mbtn.primary { border-color:var(--yellow); color:var(--yellow); }
+.mbtn.primary:hover { background:rgba(255,255,0,0.15); }
+.mbtn.danger { border-color:var(--red); color:var(--red); margin-right:auto; }
+.mbtn.danger:hover { background:rgba(255,68,68,0.15); }
+.mbtn.cancel { border-color:var(--grey); color:var(--grey); }
 
 /* ── TOAST ── */
 .toast {
-  position:fixed; bottom:18px; right:18px; z-index:2000;
+  position:fixed; bottom:20px; right:20px; z-index:2000;
   background:var(--bg2); border:1px solid var(--green-dim);
-  color:var(--green); font-family:var(--font); font-size:clamp(9px,1.5vw,12px);
-  padding:7px 15px; max-width:320px;
-  transform:translateY(70px); opacity:0;
-  transition:transform .22s, opacity .22s;
-  box-shadow:0 0 20px rgba(51,255,51,.18);
-  pointer-events:none;
+  color:var(--green); font-family:var(--font); font-size:clamp(9px,1.6vw,12px);
+  padding:8px 16px; max-width:320px;
+  transform:translateY(80px); opacity:0;
+  transition:transform 0.25s,opacity 0.25s;
+  box-shadow:0 0 20px rgba(51,255,51,0.2);
 }
-.toast.vis { transform:translateY(0); opacity:1; }
-.toast.err  { border-color:var(--red);    color:var(--red);    box-shadow:0 0 20px rgba(255,68,68,.2); }
-.toast.warn { border-color:var(--orange); color:var(--orange); box-shadow:0 0 20px rgba(255,153,0,.2); }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.error { border-color:var(--red); color:var(--red); box-shadow:0 0 20px rgba(255,68,68,0.2); }
+.toast.warn  { border-color:var(--orange); color:var(--orange); }
 
-/* ── FOOTER ── */
-footer {
-  border-top:1px solid var(--green-dk);
-  padding:clamp(7px,1.8vw,12px) clamp(10px,3vw,22px);
-  margin-top:clamp(12px,3vw,24px);
-  color:var(--grey); font-size:clamp(8px,1.3vw,11px);
-  display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between;
-}
-footer span::before { content:'C:\\> '; color:var(--green-dk); }
-
+footer { border-top:1px solid var(--green-dk); padding:clamp(8px,2vw,14px) clamp(10px,3vw,20px); margin-top:clamp(14px,3vw,24px); color:var(--grey); font-size:clamp(8px,1.4vw,11px); }
+footer::before { content:'C:\\> '; color:var(--green-dk); }
 @media (max-width:360px) { .fg-row { grid-template-columns:1fr; } }
+
+/* Subscribe modal tabs */
+.sub-tab {
+  background:none; border:none; border-bottom:2px solid transparent;
+  color:var(--grey); font-family:var(--font); font-size:clamp(9px,1.5vw,12px);
+  padding:4px 12px 8px; cursor:pointer; letter-spacing:.04em;
+  transition:color .1s,border-color .1s; margin-bottom:-1px;
+}
+.sub-tab.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+.sub-tab:hover  { color:var(--yellow); }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     BOOT SCREEN
-═══════════════════════════════════════ -->
-<div id="boot">
-  <div class="boot-line yellow" id="bl0">EZIE FAMILY TREE v3.0</div>
-  <div class="boot-line blank"></div>
-  <div class="boot-line" id="bl1">Initializing system...</div>
-  <div class="boot-line" id="bl2">Loading local storage... <span style="color:var(--green)">OK</span></div>
-  <div class="boot-line" id="bl3">Connecting to Google Sheets...<span class="boot-bar" id="bootBar"></span></div>
-  <div class="boot-line" id="bl4" style="display:none"></div>
-  <div class="boot-line blank"></div>
-  <div class="boot-line cyan" id="bl5" style="display:none">Press any key or wait to continue...</div>
-</div>
-
-<!-- ═══════════════════════════════════════
-     MAIN APP
-═══════════════════════════════════════ -->
-<div id="app">
-
-<div class="hdr">SHEET
-  <div class="hdr-path">C:\EZIE\FAMILY_TREE.EXE &nbsp;|&nbsp; With love from Grandma Patricia, Akudo and Mundez</div>
+<div class="terminal-header">
   <h1>EZIE FAMILY TREE<span class="cursor"></span></h1>
-  <div class="hdr-sub">// Living record of the Ezie lineage &nbsp;·&nbsp; auto-sync enabled</div>
+  <p>// Living record of the Ezie lineage &nbsp;|&nbsp; localStorage + Google Sheets sync</p>
 </div>
 
-<!-- STATUS BAR -->
-<div class="status-bar">
-  <div class="sb-section">
-    <span class="sb-label">SHEETS:</span>
-    <div class="sb-dot" id="sDot"></div>
-    <span class="sb-text" id="sMsg">initialising...</span>
+<!-- SYNC STATUS BAR -->
+<div class="sync-bar">
+  <span class="sync-label">SHEETS SYNC:</span>
+  <div class="sync-status">
+    <div class="sync-dot local" id="syncDot"></div>
+    <span id="syncMsg">connecting...</span>
   </div>
-  <span class="sb-divider">|</span>
-  <div class="sb-section">
-    <span class="sb-label">LAST SYNC:</span>
-    <span class="sb-text" id="sTime">—</span>
-  </div>
-  <span class="sb-divider">|</span>
-  <div class="sb-section">
-    <span class="sb-label">NODES:</span>
-    <span class="sb-nodes" id="sNodes">—</span>
-  </div>
-  <span class="sb-divider">|</span>
-  <div class="sb-section">
-    <span class="sb-label">AUTO-SYNC:</span>
-    <span class="sb-text" id="sAuto" style="color:var(--cyan)">ON</span>
-  </div>
+  <span class="sep" style="color:var(--green-dk)">|</span>
+  <button class="btn" onclick="testConnection()">[TEST]</button>
+  <button class="btn" onclick="pushToSheets(false)">[PUSH]</button>
+  <button class="btn" onclick="pullFromSheets()">[PULL]</button>
+  <span style="color:var(--grey);font-size:clamp(8px,1.3vw,10px);margin-left:4px">// auto-sync enabled — pushes 5s after each edit</span>
 </div>
 
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <span class="tb-label">LEVEL:</span>
-  <button class="btn lv" onclick="collapseToLevel(1)">[L1]</button>
-  <button class="btn lv" onclick="collapseToLevel(2)">[L2]</button>
-  <button class="btn lv" onclick="collapseToLevel(3)">[L3]</button>
-  <button class="btn lv" onclick="collapseToLevel(4)">[L4]</button>
-  <button class="btn lv on" onclick="expandAll()">[ALL]</button>
-  <span class="sep">|</span>
-  <button class="btn sync-btn" onclick="pushNow()">[⇑ PUSH]</button>
-  <button class="btn sync-btn" onclick="pullNow()">[⇓ PULL]</button>
-  <span class="sep">|</span>
-  <button class="btn" onclick="exportJSON()">[EXPORT]</button>
-  <button class="btn" onclick="importJSON()">[IMPORT]</button>
-  <button class="btn" onclick="addRootUnion()">[+ROOT]</button>
-</div>
-
-<!-- LEGEND -->
 <div class="legend">
-  <div class="leg"><div class="leg-dot" style="background:#ffff00"></div><span>Family member</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#33ff33"></div><span>Spouse (married in)</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#7cb98a"></div><span>L2</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#6ba3c8"></div><span>L3</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#c87ca0"></div><span>L4</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#e8ffe8"></div><span>[+]/[-] collapse</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#ffff00"></div><span>Family member (yellow)</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#33ff33"></div><span>Spouse / married in (green)</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#00ffcc"></div><span>Section header (cyan)</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#e8ffe8"></div><span>[+]/[-] collapse (white)</span></div>
+</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">COLLAPSE TO LEVEL:</span>
+  <button class="btn level-btn" onclick="collapseToLevel(1)">[ L1 ]</button>
+  <button class="btn level-btn" onclick="collapseToLevel(2)">[ L2 ]</button>
+  <button class="btn level-btn" onclick="collapseToLevel(3)">[ L3 ]</button>
+  <button class="btn level-btn" onclick="collapseToLevel(4)">[ L4 ]</button>
+  <button class="btn level-btn active" onclick="expandAll()">[ EXPAND ALL ]</button>
+  <span class="sep">|</span>
+  <button class="btn" onclick="exportJSON()">[EXPORT JSON]</button>
+  <button class="btn" onclick="importJSON()">[IMPORT JSON]</button>
+  <button class="btn" onclick="addRootUnion()">[+ ROOT]</button>
+  <span class="sep">|</span>
+  <button class="btn" id="alertsBtn" style="border-color:var(--cyan);color:var(--cyan)" onclick="openSubscribeModal()">[✉ ALERTS]</button>
 </div>
 
 <div id="tree" class="tree"></div>
 
-<footer>
-  <span>Auto-saved locally on every change &nbsp;·&nbsp; Auto-synced to Google Sheets</span>
-  <span>Ezie Family Tree v3.0 &nbsp;·&nbsp; Okwu di n'ulo</span>
-</footer>
+<footer>All changes auto-saved to localStorage &nbsp;|&nbsp; Use PUSH TO SHEETS to sync to Google &nbsp;|&nbsp; Ezie Family Tree v3.0</footer>
 
-</div><!-- #app -->
-
-<!-- MODAL -->
-<div class="mo" id="mo" onclick="moOverlay(event)">
-  <div class="mo-box">
-    <div class="mo-title" id="moTitle">EDIT</div>
-    <div id="moBody"></div>
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">EDIT</div>
+    <div id="modalBody"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- SUBSCRIBE MODAL -->
+<div class="modal-overlay" id="subModal" onclick="closeSubModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-title" id="subModalTitle">✉ ALERT SUBSCRIPTIONS</div>
+    <div id="subModalBody">
+
+      <!-- Tab switcher -->
+      <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--green-dk)">
+        <button class="sub-tab active" id="tab-sub" onclick="switchSubTab('sub')">[SUBSCRIBE]</button>
+        <button class="sub-tab" id="tab-unsub" onclick="switchSubTab('unsub')">[UNSUBSCRIBE]</button>
+      </div>
+
+      <!-- SUBSCRIBE PANEL -->
+      <div id="subPanel">
+        <div style="color:var(--grey);font-size:clamp(8px,1.4vw,11px);margin-bottom:12px;line-height:1.7">
+          // Get email alerts 2 days before, 1 day before, and on the day of:<br>
+          // 🎂 Birthdays &nbsp; 💍 Wedding anniversaries &nbsp; 🕯️ Death remembrances<br>
+          // Emails sent at 6am. Unsubscribe any time.
+        </div>
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="subName" placeholder="e.g. Cynthia Ezie">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="subEmail" placeholder="e.g. you@email.com">
+        </div>
+        <div class="form-group" style="margin-top:4px">
+          <div style="font-size:clamp(7px,1.2vw,10px);color:var(--grey)">
+            // To receive anniversary alerts, make sure spouses have a<br>
+            // <span style="color:var(--cyan)">Marriage Date</span> (day + month) set in their edit form.
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="mbtn cancel" onclick="closeSubModal()">[CANCEL]</button>
+          <button class="mbtn primary" onclick="submitSubscribe()">[SUBSCRIBE]</button>
+        </div>
+      </div>
+
+      <!-- UNSUBSCRIBE PANEL -->
+      <div id="unsubPanel" style="display:none">
+        <div style="color:var(--grey);font-size:clamp(8px,1.4vw,11px);margin-bottom:12px">
+          // Enter the email you subscribed with to opt out of all alerts.
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="unsubEmail" placeholder="e.g. you@email.com">
+        </div>
+        <div class="modal-actions">
+          <button class="mbtn cancel" onclick="closeSubModal()">[CANCEL]</button>
+          <button class="mbtn danger" onclick="submitUnsubscribe()">[UNSUBSCRIBE]</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <script>
 // ================================================================
 // CONFIG — hardcoded URLs
 // ================================================================
 const SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbzWJ0xpgOsIyHVmpuqSwwo3otQ_wgDAy-2kQ8OoqHXPqQJhbPuc9N6j0UXRkyGnNzEz/exec';
-const OPENSHEET_BASE = 'https://opensheet.elk.sh/1DneYu4hh-yrzrpmMCiiqwQw4BxBVj3rrFSOfUj_Ao7g';
-const SHEET_ID      = '1DneYu4hh-yrzrpmMCiiqwQw4BxBVj3rrFSOfUj_Ao7g';
-
-// Auto-sync debounce: push to Sheets X ms after last local change
-const AUTO_SYNC_DELAY = 4000; // 4 seconds
+let SCRIPT_URL_LIVE = SCRIPT_URL; // after new deployment, update this line only
 
 // ================================================================
-// STATE
+// DATA MODEL
 // ================================================================
 let familyData = [];
-let nextId     = 2000;
-let autoSyncTimer = null;
-let pendingSync   = false;
-
+let nextId = 2000;
 function uid() { return ++nextId; }
 
-// ================================================================
-// GENDER / LABEL HELPERS
-// ================================================================
 function spouseLabel(g) {
-  if (g === 'm') return 'and wife';
-  if (g === 'f') return 'and husband';
+  if (g==='m') return 'and wife';
+  if (g==='f') return 'and husband';
   return 'and spouse';
 }
-
-// ================================================================
-// CONSTRUCTORS
-// ================================================================
 function P(fn,ln,nick,g,late,by,dy,bd,notes){
   return{id:uid(),firstName:fn||'',lastName:ln||'',nickname:nick||'',
          gender:g||'u',isLate:!!late,birthYear:by||'',deathYear:dy||'',
@@ -414,18 +332,20 @@ function P(fn,ln,nick,g,late,by,dy,bd,notes){
 function SP(fn,ln,nick,g,late,by,dy,bd,notes,myr){
   return{...P(fn,ln,nick,g,late,by,dy,bd,notes),marriageYear:myr||''};
 }
-function U(m,sp,ch,lv){ return{id:uid(),member:m,spouses:sp||[],children:ch||[],level:lv}; }
+function U(member,spouses,children,level){
+  return{id:uid(),member,spouses:spouses||[],children:children||[],level};
+}
 
 // ================================================================
 // SEED DATA
 // ================================================================
 function seed(){
   familyData=[
-  // ── L1 UNION 1: Marcus + Christiania ──
-  U(P('Marcus','Ezie','Anuebunwa','m',true),[SP('Christiania','Nnaediekwe','Mgbeojirikwe','f',true)],[
-    // L2: Edmund (male) → and wife Patricia
-    U(P('Edmund','Ezie','Obizukowa (Obi)','m',true,'1919','1995'),[SP('Patricia','Ubozoh','Nneoma','f',true,'','','','','1946')],[
-      U(P('Fidelia','Ezie','','f'),[SP('Emma','Eze','','m')],[                                    // female → and husband
+  U(P('Marcus','Ezie','Anuebunwa','m',true),[SP('Christiania','Nnaediekwe','Mgbeojirikwe','f',true)],
+  [
+    U(P('Edmund','Ezie','Obizukowa (Obi)','m',true,'1919','1995'),[SP('Patricia','Ubozoh','Nneoma','f',true,'','','','','1946')],
+    [
+      U(P('Fidelia','Ezie','','f'),[SP('Emma','Eze','','m')],[
         U(P('Chuma','Eze','','m'),[SP('Chioma','Shiwobi','','f')],[],4),
         U(P('Uzoma','Eze','','m'),[SP('Zenna','?????','','f')],[],4),
         U(P('Ugochi','Eze','','f'),[SP('?????','Elinor','','m')],[],4),
@@ -434,40 +354,40 @@ function seed(){
         U(P('Maura','Eze','','f'),[],[],4),
         U(P('Chisom','Eze','','f'),[],[],4),
       ],3),
-      U(P('Justina','Ezie','','f'),[SP('Ogbuokiri','','','m')],[                                  // female → and husband
+      U(P('Justina','Ezie','','f'),[SP('Ogbuokiri','','','m')],[
         U(P('Uche','','','u'),[],[],4),
         U(P('Uju','','','u'),[],[],4),
         U(P('Kelechi','','','f'),[SP('Chris','Lyonn','','m')],[],4),
         U(P('Ginika','','','f'),[SP('?????','','','m')],[],4),
         U(P('John Paul','','','m'),[],[],4),
       ],3),
-      U(P('Imelda','Ezie','','f'),[SP('Jude','Nwoga','','m')],[                                  // female → and husband
+      U(P('Imelda','Ezie','','f'),[SP('Jude','Nwoga','','m')],[
         U(P('Tochi','','','u'),[],[],4),
         U(P('Ugochi','','','f'),[],[],4),
         U(P('Gosimuzo','','','u'),[],[],4),
         U(P('Chiaka','','','f'),[],[],4),
         U(P('Mmachi','','','u'),[],[],4),
       ],3),
-      U(P('Michael','Ezie','','m',true),[SP('Leslie','Clapp','Allen','f')],[                     // male → and wife
+      U(P('Michael','Ezie','','m',true),[SP('Leslie','Clapp','Allen','f')],[
         U(P('Chinyere','Ezie','','f'),[],[],4),
         U(P('Kelechi','Ezie','','u'),[],[],4),
         U(P('Chisara','Ezie','','f'),[SP('?????','Bonsouer','','m')],[],4),
         U(P('Chiemeka','Ezie','','m'),[],[],4),
       ],3),
-      U(P('Joseph','Ezie','','m'),[SP('Ifeyinwa','Ojimba','','f')],[                             // male → and wife
+      U(P('Joseph','Ezie','','m'),[SP('Ifeyinwa','Ojimba','','f')],[
         U(P('Cynthia','Ezie','Chiamaka','f'),[SP('Gozie','Denwigwe','','m')],[],4),
         U(P('Edmund','Ezie','Obinna U','m'),[SP('Kate','Ebie','Juliet','f')],[],4),
         U(P('Chinenye','Ezie','Yvonne Amarachi','f'),[SP('Toritseju','Onwubiko','','m')],[],4),
         U(P('Imelda','Ezie','Ifunanya','f'),[SP('Obiora','Anisiuba','','m')],[],4),
         U(P('Joseph','Ezie','Chukwudalu','m'),[],[],4),
       ],3),
-      U(P('Patrick','Ezie','','m'),[SP('Theodora','Igbo','Nkechi','f')],[                        // male → and wife
+      U(P('Patrick','Ezie','','m'),[SP('Theodora','Igbo','Nkechi','f')],[
         U(P('Patrick','','Chukwudi','m'),[],[],4),
         U(P('Onyekachi','','Jacklyn','f'),[],[],4),
         U(P('Munachi','','Jennifer','f'),[],[],4),
         U(P('Chinedu','','Michael','m'),[],[],4),
       ],3),
-      U(P('Maryjoe','Ezie','','f'),[SP('Fredrick','Ekwem','','m')],[                             // female → and husband
+      U(P('Maryjoe','Ezie','','f'),[SP('Fredrick','Ekwem','','m')],[
         U(P('Amarachi','Ekwem','','f'),[SP('Patrick','Mgbam','','m')],[],4),
         U(P('Nnamdi','Ekwem','','m'),[SP('Nnenna','?????','','f')],[],4),
         U(P('Munachi','Ekwem','','f'),[],[],4),
@@ -476,38 +396,35 @@ function seed(){
       ],3),
       U({id:uid(),firstName:'Simon',lastName:'Ezie',nickname:'',gender:'m',isLate:true,birthYear:'',deathYear:'',birthday:'',notes:'Died age 14'},[],[],3),
       U({id:uid(),firstName:'Gloria',lastName:'Ezie',nickname:'',gender:'f',isLate:true,birthYear:'',deathYear:'',birthday:'',notes:'Died age 13'},[],[],3),
-      U(P('Benjamin','Ezie','Ekene','m',true),[SP('Njideka','Obijiaka','','f')],[],3),           // male → and wife
+      U(P('Benjamin','Ezie','Ekene','m',true),[SP('Njideka','Obijiaka','','f')],[],3),
     ],2),
-    // L2: Hugh Clifford (male) → and wife Juliana
     U(P('Hugh Clifford','Abhoro','','m'),[SP('Juliana','Ezerioha','','f')],[
-      U(P('Chinonye','','','u'),[],[],3), U(P('Uchenna','','','u'),[],[],3),
-      U(P('Chichi','','','u'),[],[],3),   U(P('Ebere','','','u'),[],[],3),
-      U(P('Ada','','','u'),[],[],3),      U(P('Symphorosa','','','u'),[],[],3),
+      U(P('Chinonye','','','u'),[],[],3),U(P('Uchenna','','','u'),[],[],3),
+      U(P('Chichi','','','u'),[],[],3),U(P('Ebere','','','u'),[],[],3),
+      U(P('Ada','','','u'),[],[],3),U(P('Symphorosa','','','u'),[],[],3),
       U(P('Ifeanyichukwu','','','u'),[],[],3),
     ],2),
-    // L2: Regina (female) → and husband Lawrence
     U(P('Regina','Ike','Nwaotube','f'),[SP('Lawrence','Ike','','m')],[
-      U(P('Lauretta','','','f'),[],[],3), U(P('Edwin','','','m'),[],[],3),
-      U(P('Young','','','u'),[],[],3),    U(P('Joseph','','','m'),[],[],3),
-      U(P('Anthonia','','','f'),[],[],3), U(P('Stella','','','f'),[],[],3),
+      U(P('Lauretta','','','f'),[],[],3),U(P('Edwin','','','m'),[],[],3),
+      U(P('Young','','','u'),[],[],3),U(P('Joseph','','','m'),[],[],3),
+      U(P('Anthonia','','','f'),[],[],3),U(P('Stella','','','f'),[],[],3),
       U(P('Livina','','','f'),[],[],3),
     ],2),
-    // L2: Dorathy (female) → and husband Gregory
     U(P('Dorathy','Onyeagwara','','f'),[SP('Gregory','Onyeagwara','','m')],[
-      U(P('Ngozi','Nwabundu','','f'),[],[],3), U(P('Desmond','','','m'),[],[],3),
-      U(P('Coleman','','','m'),[],[],3),       U(P('Okezie','','','m'),[],[],3),
-      U(P('Ifeyinwa','','','f'),[],[],3),      U(P('Chinenye','','','f'),[],[],3),
+      U(P('Ngozi','Nwabundu','','f'),[],[],3),U(P('Desmond','','','m'),[],[],3),
+      U(P('Coleman','','','m'),[],[],3),U(P('Okezie','','','m'),[],[],3),
+      U(P('Ifeyinwa','','','f'),[],[],3),U(P('Chinenye','','','f'),[],[],3),
       U({id:uid(),firstName:'Winfred',lastName:'',nickname:'',gender:'u',isLate:true,birthYear:'',deathYear:'',birthday:'',notes:''},[],[],3),
     ],2),
   ],1),
 
-  // ── L1 UNION 2: Marcus + Ukwudie ──
-  U(P('Marcus','Ezie','Anuebunwa','m',true),[SP('Ukwudie','Okoronkwo','','f')],[
-    U(P('Benneth','Ezie','','m'),[SP('Evelyn','Iheanacho','','f')],[],2),                        // male → and wife
-    U(P('Cecelia','Ezie','Mgbe','f'),[SP('Felix','Ekeoche','','m')],[                            // female → and husband
-      U(P('Chiebo','','','u'),[],[],3),  U(P('Ekwutos','','','u'),[],[],3),
-      U(P('Nkechi','','','f'),[],[],3),  U(P('Gladys','','','f'),[],[],3),
-      U(P('Marcus','','','m'),[],[],3),  U(P('Leticia','','','f'),[],[],3),
+  U(P('Marcus','Ezie','Anuebunwa','m',true),[SP('Ukwudie','Okoronkwo','','f')],
+  [
+    U(P('Benneth','Ezie','','m'),[SP('Evelyn','Iheanacho','','f')],[],2),
+    U(P('Cecelia','Ezie','Mgbe','f'),[SP('Felix','Ekeoche','','m')],[
+      U(P('Chiebo','','','u'),[],[],3),U(P('Ekwutos','','','u'),[],[],3),
+      U(P('Nkechi','','','f'),[],[],3),U(P('Gladys','','','f'),[],[],3),
+      U(P('Marcus','','','m'),[],[],3),U(P('Leticia','','','f'),[],[],3),
     ],2),
     U(P('Ephriam','Ezie','','m'),[SP('Rose','(surname unknown)','','f','','','','','Grandfather (maternal side): Ahaneku, from Orlu','')],[
       U(P('Francis','','','m'),[],[],3),
@@ -519,426 +436,315 @@ function seed(){
 // ================================================================
 // LOCAL STORAGE
 // ================================================================
-function lSave(){
-  try{ localStorage.setItem('ezie_v5',JSON.stringify({data:familyData,nextId})); }catch(e){}
+function localSave(){
+  try{localStorage.setItem('ezie_v4',JSON.stringify({data:familyData,nextId}));}catch(e){}
 }
-function lLoad(){
+function localLoad(){
   try{
-    const r=localStorage.getItem('ezie_v5');
+    const r=localStorage.getItem('ezie_v4');
     if(r){const d=JSON.parse(r);familyData=d.data;nextId=d.nextId||2000;return true;}
   }catch(e){}
   return false;
 }
 
 // ================================================================
-// COUNT NODES
+// SYNC — GOOGLE SHEETS (URL hardcoded — no input needed)
 // ================================================================
-function countNodes(arr){
-  if(!arr)return 0;
-  let n=0;
-  for(const u of arr){n++;n+=countNodes(u.children);}
-  return n;
-}
-function updateNodeCount(){
-  document.getElementById('sNodes').textContent=countNodes(familyData)+' nodes';
+function setSyncStatus(state, msg){
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncMsg');
+  if(dot) dot.className = 'sync-dot ' + state;
+  if(txt) txt.textContent = msg;
 }
 
-// ================================================================
-// SYNC STATUS UI
-// ================================================================
-function setSS(state, msg){
-  const dot=document.getElementById('sDot');
-  const txt=document.getElementById('sMsg');
-  dot.className='sb-dot '+state;
-  txt.textContent=msg;
-}
-function setSyncTime(){
-  document.getElementById('sTime').textContent=new Date().toLocaleTimeString();
-}
-
-// ================================================================
-// AUTO-SYNC — debounced push after every local change
-// ================================================================
-function scheduleSync(){
-  pendingSync=true;
-  clearTimeout(autoSyncTimer);
-  autoSyncTimer=setTimeout(()=>{ pushToSheets(true); },AUTO_SYNC_DELAY);
-}
-
-// ================================================================
-// PUSH TO SHEETS
-// ================================================================
-async function pushToSheets(auto=false){
-  if(!SCRIPT_URL) return;
-  setSS('busy', auto?'auto-syncing...':'pushing...');
+async function testConnection(){
+  setSyncStatus('saving','testing...');
   try{
-    const res=await fetch(SCRIPT_URL,{
+    const res = await fetch(SCRIPT_URL_LIVE,{method:'POST',
+      body:JSON.stringify({action:'ping',data:null,nextId,savedBy:'test'}),
+      headers:{'Content-Type':'text/plain'}
+    });
+    const json = await res.json();
+    if(json.status==='ok'){
+      setSyncStatus('ok','connected ✓ '+json.timestamp?.substring(0,10));
+      toast('Connection successful!');
+    } else {
+      setSyncStatus('error','error: '+json.message);
+      toast('Error: '+json.message,'error');
+    }
+  }catch(e){
+    setSyncStatus('error','failed');
+    toast('Connection failed.','error');
+  }
+}
+
+async function pushToSheets(auto=false){
+  setSyncStatus('saving', auto?'auto-syncing...':'pushing...');
+  try{
+    const res = await fetch(SCRIPT_URL_LIVE,{
       method:'POST',
       body:JSON.stringify({action:'save',data:familyData,nextId,savedBy:auto?'auto-sync':'manual'}),
       headers:{'Content-Type':'text/plain'}
     });
-    const json=await res.json();
+    const json = await res.json();
     if(json.status==='ok'){
-      setSS('ok','synced ✓');
-      setSyncTime();
-      pendingSync=false;
-      if(!auto) toast('⇑ Pushed to Google Sheets ('+json.rowCount+' nodes)');
+      setSyncStatus('ok','synced ✓ '+new Date().toLocaleTimeString());
+      if(!auto) toast('✓ Pushed to Google Sheets ('+json.rowCount+' nodes)');
     } else {
-      setSS('err','push error');
-      toast('Push failed: '+json.message,'err');
+      setSyncStatus('error',json.message);
+      toast('Push failed: '+json.message,'error');
     }
   }catch(e){
-    setSS('warn','sync failed — local only');
-    if(!auto) toast('Push failed: '+e.message,'err');
+    setSyncStatus('warn','sync failed — local only');
+    if(!auto) toast('Push failed: '+e.message,'error');
   }
 }
 
-// ================================================================
-// PULL FROM SHEETS
-// ================================================================
-async function pullFromSheets(silent=false){
-  if(!SCRIPT_URL) return;
-  setSS('busy','pulling...');
+async function pullFromSheets(){
+  if(!confirm('Pull from Google Sheets? This will REPLACE your current local data.')) return;
+  setSyncStatus('saving','pulling...');
   try{
-    // Use OpenSheet for a simple read — but OpenSheet reads rows, not our JSON
-    // So we use the Apps Script GET endpoint for structured data
-    const res=await fetch(SCRIPT_URL+'?ts='+Date.now());
-    const json=await res.json();
+    const res = await fetch(SCRIPT_URL_LIVE+'?action=load&ts='+Date.now());
+    const json = await res.json();
     if(json.status==='ok' && json.data){
-      familyData=json.data;
-      lSave();
-      renderTree();
-      setSS('ok','pulled ✓');
-      setSyncTime();
-      if(!silent) toast('⇓ Pulled latest from Google Sheets');
-      return true;
+      familyData = json.data;
+      // handle both v1 (array) and v2 (object with .tree)
+      if(!Array.isArray(familyData) && familyData.tree) familyData = familyData.tree;
+      if(json.nextId) nextId = json.nextId;
+      localSave(); renderTree();
+      setSyncStatus('ok','pulled ✓ '+new Date().toLocaleTimeString());
+      toast('✓ Pulled from Google Sheets');
     } else if(json.data===null){
-      setSS('ok','sheet empty');
-      if(!silent) toast('Sheet has no data yet — use PUSH to upload','warn');
-      return false;
+      setSyncStatus('ok','sheet empty');
+      toast('Sheet has no data yet. Push first.','warn');
     } else {
-      setSS('warn',json.message||'pull error');
-      return false;
+      setSyncStatus('error',json.message);
+      toast('Pull failed: '+json.message,'error');
     }
   }catch(e){
-    setSS('warn','pull failed — using local');
-    return false;
+    setSyncStatus('error','pull failed');
+    toast('Pull failed: '+e.message,'error');
   }
 }
 
-// Public button handlers
-async function pushNow(){
-  await pushToSheets(false);
-}
-async function pullNow(){
-  if(!confirm('Pull from Google Sheets? This replaces your current local data.')) return;
-  await pullFromSheets(false);
+// Auto-sync debounce
+let autoSyncTimer=null;
+function scheduleAutoSync(){
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer=setTimeout(()=>pushToSheets(true), 5000);
 }
 
 // ================================================================
-// BOOT SEQUENCE
+// TOAST
 // ================================================================
-async function boot(){
-  const show=(id,delay)=>new Promise(res=>{
-    setTimeout(()=>{ const el=document.getElementById(id); if(el){el.classList.add('vis');el.style.display='';} res(); },delay);
-  });
-
-  await show('bl0',100);
-  await show('bl1',500);
-  await show('bl2',900);
-  await show('bl3',1300);
-
-  // Animate progress bar
-  setTimeout(()=>{
-    const bar=document.getElementById('bootBar');
-    if(bar) bar.classList.add('full');
-  },1400);
-
-  // Try to pull from Sheets (silent)
-  let sheetsOk = false;
-  const pullProm = pullFromSheets(true).then(ok=>{ sheetsOk=ok; });
-
-  // Wait at least 2s for bar animation
-  await new Promise(r=>setTimeout(r,2200));
-  await pullProm;
-
-  // Show result line
-  const bl4=document.getElementById('bl4');
-  if(bl4){
-    bl4.style.display='';
-    bl4.classList.add('vis');
-    if(sheetsOk){
-      bl4.classList.add('cyan');
-      bl4.textContent='Google Sheets: LOADED ✓  ('+countNodes(familyData)+' nodes)';
-    } else {
-      bl4.style.color='var(--orange)';
-      bl4.textContent='Google Sheets: using local cache — will sync on next change';
-    }
-  }
-
-  await show('bl5',300);
-
-  // Wait 1.5s then launch
-  await new Promise(r=>setTimeout(r,1500));
-  launchApp();
-}
-
-function launchApp(){
-  document.getElementById('boot').classList.add('done');
-  document.getElementById('app').classList.add('ready');
-  renderTree();
-  updateNodeCount();
-  setSyncTime();
+let toastTimer;
+function toast(msg, type='ok'){
+  const el = document.getElementById('toast');
+  el.textContent = (type==='ok'?'> ': type==='warn'?'! ':' ✕ ') + msg;
+  el.className = 'toast show' + (type!=='ok'?' '+type:'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.classList.remove('show'); }, 3200);
 }
 
 // ================================================================
 // UTILS
 // ================================================================
-function dn(p){
-  let n=(p.firstName||'').trim();
-  const ln=(p.lastName||'').trim();
-  if(ln) n+=' '+ln;
-  return n||'(Unknown)';
+function dn(p){let n=(p.firstName||'').trim();const ln=(p.lastName||'').trim();if(ln)n+=' '+ln;return n||'(Unknown)';}
+function nick(p){return p.nickname?` "${p.nickname}"`:''}
+function dates(p){
+  if(p.birthYear&&p.isLate&&p.deathYear)return`(${p.birthYear}-${p.deathYear})`;
+  if(p.birthYear&&p.isLate)return`(${p.birthYear}-†)`;
+  if(p.birthYear)return`(b.${p.birthYear})`;
+  if(p.isLate&&p.deathYear)return`(†${p.deathYear})`;
+  if(p.isLate)return'(late)';return'';
 }
-function nk(p){ return p.nickname?` "${p.nickname}"`:''; }
-function dts(p){
-  if(p.birthYear&&p.isLate&&p.deathYear) return`(${p.birthYear}-${p.deathYear})`;
-  if(p.birthYear&&p.isLate) return`(${p.birthYear}-†)`;
-  if(p.birthYear) return`(b.${p.birthYear})`;
-  if(p.isLate&&p.deathYear) return`(†${p.deathYear})`;
-  if(p.isLate) return'(late)';
-  return'';
-}
-function esc(s){ return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-function val(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
-
-function findU(id,arr){
-  for(const u of arr){
-    if(u.id===id)return u;
-    if(u.children){const f=findU(id,u.children);if(f)return f;}
-  }
-  return null;
-}
-function findPA(id,arr){
-  for(const u of arr){
-    if(u.children){
-      if(u.children.find(c=>c.id===id))return u.children;
-      const f=findPA(id,u.children);if(f)return f;
-    }
-  }
-  return null;
-}
-
-// ================================================================
-// AFTER CHANGE — save locally + schedule auto-sync
-// ================================================================
-function afterChange(){
-  lSave();
-  renderTree();
-  updateNodeCount();
-  scheduleSync();
-}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function val(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function findU(id,arr){for(const u of arr){if(u.id===id)return u;if(u.children){const f=findU(id,u.children);if(f)return f;}}return null;}
+function findPA(id,arr){for(const u of arr){if(u.children){if(u.children.find(c=>c.id===id))return u.children;const f=findPA(id,u.children);if(f)return f;}}return null;}
 
 // ================================================================
 // RENDER
 // ================================================================
-const LV_COLORS=['','#ffff00','#7cb98a','#6ba3c8','#c87ca0'];
-
-function renderUnion(u, pipes, isLast){
+function renderUnion(u, parentPipes, isLast){
   const m=u.member;
-  const hasKids=u.children&&u.children.length>0;
-  const conn=isLast?'└── ':'├── ';
-  const childPipes=pipes+(isLast?'    ':'│   ');
-  const col=LV_COLORS[u.level]||'#c87ca0';
-  const dStr=dts(m);
-
-  const tBtn=hasKids
-    ?`<button class="u-toggle" id="tgl-${u.id}" onclick="tog('ch-${u.id}','tgl-${u.id}')">[-]</button>`
+  const hasChildren=u.children&&u.children.length>0;
+  const connector=isLast?'└── ':'├── ';
+  const childPipes=parentPipes+(isLast?'    ':'│   ');
+  const lvlColor=['','#ffff00','#7cb98a','#6ba3c8','#c87ca0'][u.level]||'#c87ca0';
+  const toggleId='ch-'+u.id;
+  let toggleBtn=hasChildren
+    ?`<button class="u-toggle" id="tgl-${u.id}" onclick="toggle('${toggleId}','tgl-${u.id}')">[-]</button>`
     :`<button class="u-toggle leaf" disabled>[·]</button>`;
+  const dStr=dates(m);
 
-  let spHtml='';
+  let spouseHtml='';
   u.spouses.forEach(sp=>{
-    const lbl=spouseLabel(m.gender);
-    const myr=sp.marriageYear?` (m.${sp.marriageYear})`:'';
-    spHtml+=`<div class="u-spouse-line">
+    const label=spouseLabel(m.gender);
+    const myrStr=sp.marriageYear?` (m.${sp.marriageYear})`:'';
+    spouseHtml+=`<div class="u-spouse-line">
       <span style="color:var(--green-dk);user-select:none">${esc(childPipes)}    </span>
-      <span class="u-slabel">${lbl}${myr}</span>
-      <span class="u-sname">&nbsp;${esc(dn(sp))}${esc(nk(sp))}</span>
-      <button class="ab" onclick="editSpouse(${u.id},${sp.id})" style="margin-left:4px">[edit]</button>
+      <span class="u-spouse-label">${label}${myrStr}</span>
+      <span class="u-spouse-name">&nbsp;${esc(dn(sp))}${esc(nick(sp))}</span>
+      <span class="act-btn" style="display:inline-block;cursor:pointer;font-size:clamp(8px,1.3vw,10px);border:1px solid var(--green-dk);color:var(--green-dim);padding:0 3px;margin-left:4px;" onclick="editSpouse(${u.id},${sp.id})">[edit]</span>
     </div>`;
   });
   if(!u.spouses.length){
-    spHtml=`<div class="u-spouse-line">
+    spouseHtml=`<div class="u-spouse-line">
       <span style="color:var(--green-dk);user-select:none">${esc(childPipes)}    </span>
-      <button class="ab" onclick="addSpouse(${u.id})">[+ add spouse]</button>
+      <button class="act-btn" onclick="addSpouse(${u.id})">[+ add spouse]</button>
     </div>`;
   }
-
-  const noteHtml=m.notes?`<div class="u-note"><span style="color:var(--green-dk);user-select:none">${esc(childPipes)}    </span>// ${esc(m.notes)}</div>`:'';
-  const addSpBtn=u.spouses.length?`<button class="ab" onclick="addSpouse(${u.id})">[+sp]</button>`:'';
+  const noteStr=m.notes?`<div class="u-note"><span style="color:var(--green-dk);user-select:none">${esc(childPipes)}    </span>// ${esc(m.notes)}</div>`:'';
 
   return`<div class="u-block" data-level="${u.level}" data-id="${u.id}">
   <div class="u-row">
-    <span class="u-pipes">${esc(pipes)}${esc(conn)}</span>
+    <span class="u-pipes" style="color:var(--green-dk)">${esc(parentPipes)}${esc(connector)}</span>
     <div class="u-content">
-      ${tBtn}<span class="u-member${m.isLate?' late':''}" style="color:${col}">${esc(dn(m))}${esc(nk(m))}</span>${dStr?`<span class="u-dates">${esc(dStr)}</span>`:''}
+      ${toggleBtn}<span class="u-member${m.isLate?' late':''}" style="color:${lvlColor}">${esc(dn(m))}${esc(nick(m))}</span>${dStr?`<span class="u-dates">${esc(dStr)}</span>`:''}
       <span class="u-actions">
-        <button class="ab" onclick="editUnion(${u.id})">[edit]</button>
-        <button class="ab" onclick="addChild(${u.id})">[+child]</button>
-        ${addSpBtn}
-        <button class="ab del" onclick="delUnion(${u.id})">[del]</button>
+        <button class="act-btn" onclick="editUnion(${u.id})">[edit]</button>
+        <button class="act-btn" onclick="addChild(${u.id})">[+child]</button>
+        ${u.spouses.length?`<button class="act-btn" onclick="addSpouse(${u.id})">[+spouse]</button>`:''}
+        <button class="act-btn danger" onclick="deleteUnion(${u.id})">[del]</button>
       </span>
     </div>
   </div>
-  ${spHtml}${noteHtml}
-  ${hasKids?`<div class="u-children" id="ch-${u.id}">${u.children.map((c,i)=>renderUnion(c,childPipes,i===u.children.length-1)).join('')}</div>`:''}
+  ${spouseHtml}${noteStr}
+  ${hasChildren?`<div class="u-children" id="ch-${u.id}">${u.children.map((c,i)=>renderUnion(c,childPipes,i===u.children.length-1)).join('')}</div>`:''}
 </div>`;
 }
 
-const SECTION_LABELS=[
-  'UNION 1 — Marcus Anuebunwa Ezie & Christiania Mgbeojirikwe Nnaediekwe',
-  'UNION 2 — Marcus Anuebunwa Ezie & Ukwudie Okoronkwo',
-];
 function renderTree(){
+  const tree=document.getElementById('tree');
+  const sections=['UNION 1 — Marcus Anuebunwa Ezie & Christiania Mgbeojirikwe Nnaediekwe','UNION 2 — Marcus Anuebunwa Ezie & Ukwudie Okoronkwo'];
   let html='';
   familyData.forEach((u,i)=>{
-    html+=`<div class="s-head">${SECTION_LABELS[i]||'ADDITIONAL ROOT FAMILY'}</div>`;
+    html+=`<div class="section-head">${sections[i]||'ADDITIONAL ROOT FAMILY'}</div>`;
     html+=renderUnion(u,'',true);
   });
-  document.getElementById('tree').innerHTML=html;
+  tree.innerHTML=html;
 }
 
 // ================================================================
 // COLLAPSE / EXPAND
 // ================================================================
-function tog(chId,btnId){
-  const el=document.getElementById(chId);
-  const btn=document.getElementById(btnId);
-  if(!el)return;
-  const c=el.classList.toggle('collapsed');
+function toggle(childId,btnId){
+  const el=document.getElementById(childId);const btn=document.getElementById(btnId);
+  if(!el)return;const c=el.classList.toggle('collapsed');
   if(btn)btn.textContent=c?'[+]':'[-]';
 }
-function collapseToLevel(max){
+function collapseToLevel(maxLevel){
   document.querySelectorAll('.u-children').forEach(el=>el.classList.remove('collapsed'));
   document.querySelectorAll('.u-toggle:not(.leaf)').forEach(b=>b.textContent='[-]');
-  document.querySelectorAll('.u-block').forEach(bl=>{
-    const lv=parseInt(bl.dataset.level);
-    if(lv>=max){
-      const cc=bl.querySelector(':scope > .u-children');
-      if(cc){cc.classList.add('collapsed');const b=document.getElementById('tgl-'+bl.dataset.id);if(b)b.textContent='[+]';}
+  document.querySelectorAll('.u-block').forEach(block=>{
+    const lvl=parseInt(block.dataset.level);
+    if(lvl>=maxLevel){
+      const cc=block.querySelector(':scope > .u-children');
+      if(cc){cc.classList.add('collapsed');const btn=document.getElementById('tgl-'+block.dataset.id);if(btn)btn.textContent='[+]';}
     }
   });
-  document.querySelectorAll('.btn.lv').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.btn.lv')[max-1]?.classList.add('on');
+  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.level-btn')[maxLevel-1]?.classList.add('active');
 }
 function expandAll(){
   document.querySelectorAll('.u-children').forEach(el=>el.classList.remove('collapsed'));
   document.querySelectorAll('.u-toggle:not(.leaf)').forEach(b=>b.textContent='[-]');
-  document.querySelectorAll('.btn.lv').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.btn.lv')[4]?.classList.add('on');
+  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.level-btn')[4]?.classList.add('active');
 }
 
 // ================================================================
 // MODAL
 // ================================================================
-let moCb=null;
-function openMo(title,body,cb){
-  document.getElementById('moTitle').textContent=title;
-  document.getElementById('moBody').innerHTML=body;
-  moCb=cb;
-  document.getElementById('mo').classList.add('on');
+let modalCb=null;
+function openModal(title,body,cb){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  modalCb=cb;
+  document.getElementById('modalOverlay').classList.add('active');
 }
-function closeMo(){ document.getElementById('mo').classList.remove('on'); moCb=null; }
-function moOverlay(e){ if(e.target===document.getElementById('mo'))closeMo(); }
-function saveMo(){ if(moCb)moCb(); }
+function closeModal(){document.getElementById('modalOverlay').classList.remove('active');modalCb=null;}
+function closeModalOnOverlay(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+function saveModal(){if(modalCb)modalCb();}
 
 // ================================================================
-// FORM HELPERS
+// PERSON FORM
 // ================================================================
-function pForm(p,px){
+function pForm(p,prefix){
   const go=(v,l)=>`<option value="${v}" ${p.gender===v?'selected':''}>${l}</option>`;
   return`<div class="fg-row">
-    <div class="fg"><label>First Name</label><input id="${px}fn" value="${esc(p.firstName)}"></div>
-    <div class="fg"><label>Last Name</label><input id="${px}ln" value="${esc(p.lastName)}"></div>
+    <div class="fg"><label>First Name</label><input id="${prefix}fn" value="${esc(p.firstName)}"></div>
+    <div class="fg"><label>Last Name</label><input id="${prefix}ln" value="${esc(p.lastName)}"></div>
   </div>
-  <div class="fg"><label>Nickname / Middle Names</label><input id="${px}nk" value="${esc(p.nickname)}"></div>
+  <div class="fg"><label>Nickname / Middle Names</label><input id="${prefix}nick" value="${esc(p.nickname)}"></div>
   <div class="fg-row">
-    <div class="fg"><label>Gender</label>
-      <select id="${px}g">${go('m','Male')}${go('f','Female')}${go('u','Unknown')}</select>
-      <div class="fg-hint">// controls "and wife" / "and husband"</div>
-    </div>
-    <div class="fg"><label>Status</label>
-      <select id="${px}late">
-        <option value="0" ${!p.isLate?'selected':''}>Living</option>
-        <option value="1" ${p.isLate?'selected':''}>Late (deceased)</option>
-      </select>
-    </div>
+    <div class="fg"><label>Gender</label><select id="${prefix}g">${go('m','Male')}${go('f','Female')}${go('u','Unknown')}</select><div class="fg-hint">// controls "and wife" / "and husband"</div></div>
+    <div class="fg"><label>Status</label><select id="${prefix}late"><option value="0" ${!p.isLate?'selected':''}>Living</option><option value="1" ${p.isLate?'selected':''}>Late</option></select></div>
   </div>
   <div class="fg-row">
-    <div class="fg"><label>Birth Year</label><input id="${px}by" value="${esc(p.birthYear)}" placeholder="e.g. 1945"></div>
-    <div class="fg"><label>Death Year</label><input id="${px}dy" value="${esc(p.deathYear)}" placeholder="if late"></div>
+    <div class="fg"><label>Birth Year</label><input id="${prefix}by" value="${esc(p.birthYear)}" placeholder="e.g. 1950"></div>
+    <div class="fg"><label>Death Year</label><input id="${prefix}dy" value="${esc(p.deathYear)}" placeholder="if late"></div>
   </div>
-  <div class="fg"><label>Birthday (day + month)</label><input id="${px}bd" value="${esc(p.birthday)}" placeholder="e.g. 12 March"></div>
-  <div class="fg"><label>Notes</label><textarea id="${px}notes">${esc(p.notes||'')}</textarea></div>`;
+  <div class="fg"><label>Birthday (day + month)</label><input id="${prefix}bd" value="${esc(p.birthday)}" placeholder="e.g. 12 March"></div>
+  <div class="fg"><label>Notes</label><textarea id="${prefix}notes">${esc(p.notes||'')}</textarea></div>`;
 }
-function readForm(p,px){
-  p.firstName=val(px+'fn'); p.lastName=val(px+'ln'); p.nickname=val(px+'nk');
-  p.gender=val(px+'g');
-  p.isLate=document.getElementById(px+'late').value==='1';
-  p.birthYear=val(px+'by'); p.deathYear=val(px+'dy');
-  p.birthday=val(px+'bd'); p.notes=val(px+'notes');
-}
-function mAct(extraLeft,cancelFn,saveFn){
-  return`<div class="mo-actions">${extraLeft||''}<button class="mb no" onclick="${cancelFn||'closeMo()'}">[CANCEL]</button><button class="mb ok" onclick="${saveFn||'saveMo()'}">[SAVE]</button></div>`;
+function readForm(p,prefix){
+  p.firstName=val(prefix+'fn');p.lastName=val(prefix+'ln');p.nickname=val(prefix+'nick');
+  p.gender=val(prefix+'g');p.isLate=document.getElementById(prefix+'late').value==='1';
+  p.birthYear=val(prefix+'by');p.deathYear=val(prefix+'dy');
+  p.birthday=val(prefix+'bd');p.notes=val(prefix+'notes');
 }
 
 // ================================================================
-// EDIT MEMBER
+// EDIT / DELETE MEMBER
 // ================================================================
 function editUnion(id){
   const u=findU(id,familyData);if(!u)return;
-  openMo('EDIT: '+dn(u.member).toUpperCase(),
-    pForm(u.member,'em_')+
-    `<div class="mo-actions"><button class="mb bad" onclick="delUnion(${id})">[DELETE]</button><button class="mb no" onclick="closeMo()">[CANCEL]</button><button class="mb ok" onclick="saveMo()">[SAVE]</button></div>`,
-    ()=>{ readForm(u.member,'em_'); afterChange(); closeMo(); toast('Saved'); }
-  );
+  openModal('EDIT: '+dn(u.member).toUpperCase(),
+    pForm(u.member,'em_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteUnion(${id})">[DEL]</button><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[SAVE]</button></div>`,
+    ()=>{readForm(u.member,'em_');localSave();renderTree();closeModal();toast('Saved');scheduleAutoSync();});
 }
-function delUnion(id){
+function deleteUnion(id){
   if(!confirm('Delete this person and all their descendants?'))return;
   const pa=findPA(id,familyData);
   if(pa){const i=pa.findIndex(u=>u.id===id);if(i!==-1)pa.splice(i,1);}
   else{const i=familyData.findIndex(u=>u.id===id);if(i!==-1)familyData.splice(i,1);}
-  afterChange(); closeMo(); toast('Deleted');
+  localSave();renderTree();closeModal();toast('Deleted');scheduleAutoSync();
 }
 
 // ================================================================
 // SPOUSE
 // ================================================================
-function spForm(sp,px){
-  return pForm(sp,px)+`<div class="fg"><label>Marriage Year</label><input id="${px}myr" value="${esc(sp.marriageYear||'')}"></div>`;
+function spForm(sp,prefix){
+  return pForm(sp,prefix)+`
+  <div class="fg-row">
+    <div class="fg"><label>Marriage Year</label><input id="${prefix}myr" value="${esc(sp.marriageYear||'')}" placeholder="e.g. 1982"></div>
+    <div class="fg"><label>Marriage Date <span style="color:var(--cyan)">(for anniversary alerts)</span></label><input id="${prefix}mdate" value="${esc(sp.marriageDate||'')}" placeholder="e.g. 14 February"></div>
+  </div>`;
+}
+function readSpouseExtra(sp,prefix){
+  sp.marriageYear=val(prefix+'myr');
+  sp.marriageDate=val(prefix+'mdate');
 }
 function editSpouse(uid2,sid){
   const u=findU(uid2,familyData);if(!u)return;
   const sp=u.spouses.find(s=>s.id===sid);if(!sp)return;
-  openMo('EDIT SPOUSE: '+dn(sp).toUpperCase(),
-    spForm(sp,'sp_')+
-    `<div class="mo-actions"><button class="mb bad" onclick="delSpouse(${uid2},${sid})">[REMOVE]</button><button class="mb no" onclick="closeMo()">[CANCEL]</button><button class="mb ok" onclick="saveMo()">[SAVE]</button></div>`,
-    ()=>{ readForm(sp,'sp_'); sp.marriageYear=val('sp_myr'); afterChange(); closeMo(); toast('Spouse updated'); }
-  );
+  openModal('EDIT SPOUSE: '+dn(sp).toUpperCase(),
+    spForm(sp,'sp_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteSpouse(${uid2},${sid})">[REMOVE]</button><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[SAVE]</button></div>`,
+    ()=>{readForm(sp,'sp_');readSpouseExtra(sp,'sp_');localSave();renderTree();closeModal();toast('Spouse saved');scheduleAutoSync();});
 }
-function delSpouse(uid2,sid){
-  if(!confirm('Remove this spouse?'))return;
+function deleteSpouse(uid2,sid){
+  if(!confirm('Remove spouse?'))return;
   const u=findU(uid2,familyData);if(u)u.spouses=u.spouses.filter(s=>s.id!==sid);
-  afterChange(); closeMo(); toast('Spouse removed');
+  localSave();renderTree();closeModal();toast('Spouse removed');scheduleAutoSync();
 }
 function addSpouse(uid2){
   const u=findU(uid2,familyData);if(!u)return;
-  const sp={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:'',marriageYear:''};
-  openMo('ADD SPOUSE TO: '+dn(u.member).toUpperCase(),
-    spForm(sp,'ns_')+
-    `<div class="mo-actions"><button class="mb no" onclick="closeMo()">[CANCEL]</button><button class="mb ok" onclick="saveMo()">[ADD]</button></div>`,
-    ()=>{ readForm(sp,'ns_'); sp.marriageYear=val('ns_myr'); if(!sp.firstName&&!sp.lastName){alert('Enter a name.');return;} u.spouses.push(sp); afterChange(); closeMo(); toast('Spouse added'); }
-  );
+  const sp={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:'',marriageYear:'',marriageDate:''};
+  openModal('ADD SPOUSE TO: '+dn(u.member).toUpperCase(),
+    spForm(sp,'ns_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
+    ()=>{readForm(sp,'ns_');readSpouseExtra(sp,'ns_');if(!sp.firstName&&!sp.lastName){alert('Enter a name.');return;}u.spouses.push(sp);localSave();renderTree();closeModal();toast('Spouse added');scheduleAutoSync();});
 }
 
 // ================================================================
@@ -946,25 +752,21 @@ function addSpouse(uid2){
 // ================================================================
 function addChild(pid){
   const parent=findU(pid,familyData);if(!parent)return;
-  const lv=Math.min((parent.level||1)+1,5);
+  const lvl=Math.min((parent.level||1)+1,5);
   const m={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:''};
-  openMo('ADD CHILD UNDER: '+dn(parent.member).toUpperCase(),
-    pForm(m,'nc_')+
-    `<div class="mo-actions"><button class="mb no" onclick="closeMo()">[CANCEL]</button><button class="mb ok" onclick="saveMo()">[ADD]</button></div>`,
-    ()=>{ readForm(m,'nc_'); if(!m.firstName){alert('Enter a first name.');return;} parent.children.push({id:uid(),member:m,spouses:[],children:[],level:lv}); afterChange(); closeMo(); toast('Child added'); }
-  );
+  openModal('ADD CHILD UNDER: '+dn(parent.member).toUpperCase(),
+    pForm(m,'nc_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
+    ()=>{readForm(m,'nc_');if(!m.firstName){alert('Enter a first name.');return;}parent.children.push({id:uid(),member:m,spouses:[],children:[],level:lvl});localSave();renderTree();closeModal();toast('Child added');scheduleAutoSync();});
 }
 function addRootUnion(){
   const m={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:''};
-  openMo('ADD ROOT FAMILY MEMBER',
-    pForm(m,'nr_')+
-    `<div class="mo-actions"><button class="mb no" onclick="closeMo()">[CANCEL]</button><button class="mb ok" onclick="saveMo()">[ADD]</button></div>`,
-    ()=>{ readForm(m,'nr_'); if(!m.firstName){alert('Enter a first name.');return;} familyData.push({id:uid(),member:m,spouses:[],children:[],level:1}); afterChange(); closeMo(); toast('Root added'); }
-  );
+  openModal('ADD ROOT FAMILY MEMBER',
+    pForm(m,'nr_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
+    ()=>{readForm(m,'nr_');if(!m.firstName){alert('Enter a first name.');return;}familyData.push({id:uid(),member:m,spouses:[],children:[],level:1});localSave();renderTree();closeModal();toast('Root added');scheduleAutoSync();});
 }
 
 // ================================================================
-// EXPORT / IMPORT
+// EXPORT / IMPORT JSON
 // ================================================================
 function exportJSON(){
   const b=new Blob([JSON.stringify({data:familyData,nextId},null,2)],{type:'application/json'});
@@ -976,38 +778,109 @@ function importJSON(){
   inp.onchange=e=>{
     const f=e.target.files[0];if(!f)return;
     const r=new FileReader();
-    r.onload=ev=>{
-      try{
-        const d=JSON.parse(ev.target.result);
-        if(d.data){familyData=d.data;nextId=d.nextId||9999;afterChange();toast('JSON imported');}
-        else alert('Invalid format.');
-      }catch(err){alert('Invalid JSON.');}
-    };
+    r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.data){familyData=d.data;nextId=d.nextId||9999;localSave();renderTree();toast('JSON imported');scheduleAutoSync();}else alert('Invalid format.');}catch(err){alert('Invalid JSON.');}};
     r.readAsText(f);
-  };
-  inp.click();
-}
-
-// ================================================================
-// TOAST
-// ================================================================
-let toastT;
-function toast(msg,type=''){
-  const el=document.getElementById('toast');
-  el.textContent=(type==='err'?'✕ ':type==='warn'?'! ':'> ')+msg;
-  el.className='toast vis'+(type?' '+type:'');
-  clearTimeout(toastT);
-  toastT=setTimeout(()=>el.classList.remove('vis'),3000);
+  };inp.click();
 }
 
 // ================================================================
 // INIT
 // ================================================================
-// Load local data first (so boot has something if sheets fail)
-if(!lLoad()){ seed(); lSave(); }
+if(!localLoad()){seed();localSave();}
+setSyncStatus('local','ready — will auto-sync on changes');
+renderTree();
 
-// Run boot sequence
-boot();
+// ================================================================
+// SUBSCRIBE MODAL
+// ================================================================
+function openSubscribeModal(){
+  document.getElementById('subModal').classList.add('active');
+  switchSubTab('sub');
+  // Reset fields
+  ['subName','subEmail','unsubEmail'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+}
+function closeSubModal(){
+  document.getElementById('subModal').classList.remove('active');
+}
+function closeSubModalOnOverlay(e){
+  if(e.target===document.getElementById('subModal'))closeSubModal();
+}
+function switchSubTab(tab){
+  document.getElementById('subPanel').style.display   = tab==='sub'  ?'block':'none';
+  document.getElementById('unsubPanel').style.display = tab==='unsub'?'block':'none';
+  document.getElementById('tab-sub').classList.toggle('active', tab==='sub');
+  document.getElementById('tab-unsub').classList.toggle('active', tab==='unsub');
+}
+
+// ── SUBSCRIBE ──
+async function submitSubscribe(){
+  const email = (document.getElementById('subEmail').value||'').trim();
+  const name  = (document.getElementById('subName').value||'').trim();
+  if(!email||!email.includes('@')){ toast('Please enter a valid email address','error'); return; }
+
+  const btn = document.querySelector('#subPanel .mbtn.primary');
+  if(btn){ btn.textContent='[SENDING...]'; btn.disabled=true; }
+
+  try{
+    const res  = await fetch(SCRIPT_URL_LIVE,{
+      method:'POST',
+      body: JSON.stringify({action:'subscribe', email, name}),
+      headers:{'Content-Type':'text/plain'}
+    });
+    const json = await res.json();
+
+    if(json.status==='ok'){
+      if(json.message==='already_subscribed'){
+        toast('That email is already subscribed!','warn');
+      } else {
+        toast('✓ Subscribed! Check your inbox for a confirmation email.');
+        closeSubModal();
+      }
+    } else {
+      toast('Error: '+(json.message||'unknown'),'error');
+    }
+  }catch(e){
+    toast('Could not reach server. Try again.','error');
+  } finally {
+    if(btn){ btn.textContent='[SUBSCRIBE]'; btn.disabled=false; }
+  }
+}
+
+// ── UNSUBSCRIBE ──
+async function submitUnsubscribe(){
+  const email = (document.getElementById('unsubEmail').value||'').trim();
+  if(!email||!email.includes('@')){ toast('Please enter a valid email address','error'); return; }
+  if(!confirm('Unsubscribe '+email+' from all Ezie Family Tree alerts?')) return;
+
+  const btn = document.querySelector('#unsubPanel .mbtn.danger');
+  if(btn){ btn.textContent='[REMOVING...]'; btn.disabled=true; }
+
+  try{
+    const res  = await fetch(SCRIPT_URL_LIVE,{
+      method:'POST',
+      body: JSON.stringify({action:'unsubscribe', email}),
+      headers:{'Content-Type':'text/plain'}
+    });
+    const json = await res.json();
+
+    if(json.status==='ok'){
+      if(json.message==='not_found'){
+        toast('That email was not found in our subscriber list.','warn');
+      } else {
+        toast('✓ Unsubscribed successfully.');
+        closeSubModal();
+      }
+    } else {
+      toast('Error: '+(json.message||'unknown'),'error');
+    }
+  }catch(e){
+    toast('Could not reach server. Try again.','error');
+  } finally {
+    if(btn){ btn.textContent='[UNSUBSCRIBE]'; btn.disabled=false; }
+  }
+}
 </script>
 </body>
 </html>
