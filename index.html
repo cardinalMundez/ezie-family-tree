@@ -1,311 +1,731 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="modern">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ezie Family Tree</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:        #0a0c0a;
-  --bg2:       #0d110d;
-  --bg3:       #111611;
-  --green:     #33ff33;
-  --green-dim: #1a9c1a;
-  --green-dk:  #0f5a0f;
-  --yellow:    #ffff00;
-  --yellow-dim:#cccc00;
-  --white:     #e8ffe8;
-  --grey:      #4a6a4a;
-  --red:       #ff4444;
-  --cyan:      #00ffcc;
-  --orange:    #ff9900;
-  --scanline:  rgba(0,0,0,0.18);
-  --font:      'Share Tech Mono', 'Courier New', monospace;
-  --font-hdr:  'VT323', monospace;
+
+/* ════════════════════════════════════════════════
+   MODERN THEME  (data-theme="modern")
+════════════════════════════════════════════════ */
+[data-theme="modern"] {
+  --bg:           #faf7f2;
+  --bg2:          #fffdf9;
+  --bg3:          #f2ede4;
+  --surface:      #fffdf9;
+  --border:       #e8dfd0;
+  --border-hi:    #c4a882;
+  --text:         #1e1612;
+  --text-dim:     #9e9087;
+  --text-hi:      #5c4123;
+  --accent1:      #8b6f47;
+  --accent2:      #6b7c5e;
+  --accent3:      #c49a3c;
+  --danger:       #b85c38;
+  --member-color: #5c4123;
+  --spouse-color: #6b7c5e;
+  --serif:        'Cormorant Garamond', Georgia, serif;
+  --font:         'DM Sans', sans-serif;
+  --radius:       10px;
+  --shadow:       0 2px 12px rgba(139,111,71,0.10);
+  --shadow-lg:    0 20px 60px rgba(92,65,35,0.18);
 }
+
+/* ════════════════════════════════════════════════
+   TERMINAL THEME  (data-theme="terminal")
+════════════════════════════════════════════════ */
+[data-theme="terminal"] {
+  --bg:           #0a0c0a;
+  --bg2:          #0d110d;
+  --bg3:          #111611;
+  --surface:      #0d110d;
+  --border:       #0f5a0f;
+  --border-hi:    #1a9c1a;
+  --text:         #e8ffe8;
+  --text-dim:     #4a6a4a;
+  --text-hi:      #33ff33;
+  --accent1:      #33ff33;
+  --accent2:      #00ffcc;
+  --accent3:      #ffff00;
+  --danger:       #ff4444;
+  --member-color: #ffff00;
+  --spouse-color: #33ff33;
+  --serif:        'VT323', monospace;
+  --font:         'Share Tech Mono', 'Courier New', monospace;
+  --radius:       0px;
+  --shadow:       none;
+  --shadow-lg:    0 0 30px rgba(51,255,51,0.15);
+}
+
+/* ════════════════════════════════════════════════
+   GLOBAL RESET
+════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
+
 body {
-  background: var(--bg); color: var(--green);
-  font-family: var(--font); font-size: clamp(11px, 2vw, 14px);
-  line-height: 1.5; min-height: 100vh; overflow-x: hidden;
-  background-image: repeating-linear-gradient(0deg, var(--scanline) 0px, var(--scanline) 1px, transparent 1px, transparent 3px);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.35s, color 0.35s;
+}
+
+/* Terminal scanline overlay */
+[data-theme="terminal"] body {
+  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px);
   background-attachment: fixed;
+  animation: flicker 8s infinite;
 }
 @keyframes flicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:.97} 94%{opacity:1} 96%{opacity:.98} 97%{opacity:1} }
-body { animation: flicker 8s infinite; }
 
-/* ── HEADER ── */
-.terminal-header {
-  border-bottom: 1px solid var(--green-dim);
-  padding: clamp(8px,2vw,16px) clamp(10px,3vw,20px);
-  margin-bottom: 0;
+/* ════════════════════════════════════════════════
+   THEME TOGGLE BUTTON  (always visible top-right)
+════════════════════════════════════════════════ */
+.theme-toggle {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border-hi);
+  border-radius: 999px;
+  padding: 6px 14px 6px 10px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text-dim);
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
 }
-.terminal-header::before {
-  content: 'C:\\EZIE\\FAMILY_TREE.EXE';
-  display: block; color: var(--grey);
-  font-size: clamp(8px,1.5vw,11px); margin-bottom: 4px; letter-spacing: 0.08em;
+.theme-toggle:hover { color: var(--text-hi); border-color: var(--accent1); }
+
+/* The pill track */
+.toggle-track {
+  width: 36px; height: 20px;
+  background: var(--bg3);
+  border: 1px solid var(--border-hi);
+  border-radius: 999px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.25s;
 }
-.terminal-header h1 {
-  font-family: var(--font-hdr); font-size: clamp(22px,6vw,52px);
-  color: var(--yellow); letter-spacing: 0.06em; line-height: 1;
+[data-theme="terminal"] .toggle-track { background: var(--accent1); }
+.toggle-knob {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 0.25s, background 0.25s;
+}
+[data-theme="terminal"] .toggle-knob { transform: translateX(16px); background: var(--bg); }
+
+.toggle-label { white-space: nowrap; font-size: 11px; letter-spacing: 0.06em; }
+[data-theme="modern"]   .toggle-label::after { content: 'Classic view'; }
+[data-theme="terminal"] .toggle-label::after { content: 'Modern view'; }
+
+/* ════════════════════════════════════════════════
+   HEADER
+════════════════════════════════════════════════ */
+.site-header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: clamp(16px,3vw,28px) clamp(16px,4vw,40px) clamp(12px,2.5vw,24px);
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+  transition: background 0.35s, border-color 0.35s;
+  padding-right: 140px; /* room for toggle */
+}
+
+/* — Modern header — */
+[data-theme="modern"] .header-eyebrow {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent1); margin-bottom: 6px;
+}
+[data-theme="modern"] .header-title {
+  font-family: var(--serif);
+  font-size: clamp(32px,6vw,56px);
+  font-weight: 400; color: var(--text-hi);
+  line-height: 1; letter-spacing: -0.01em;
+}
+[data-theme="modern"] .header-title em { font-style: italic; color: var(--accent1); }
+[data-theme="modern"] .header-sub { font-size: 13px; color: var(--text-dim); margin-top: 8px; }
+
+/* — Terminal header — */
+[data-theme="terminal"] .header-eyebrow {
+  font-size: clamp(8px,1.5vw,11px); color: var(--text-dim);
+  letter-spacing: 0.08em; margin-bottom: 4px;
+}
+[data-theme="terminal"] .header-eyebrow::before { content: 'C:\\EZIE\\FAMILY_TREE.EXE'; display: block; }
+[data-theme="terminal"] .header-title {
+  font-family: var(--serif);
+  font-size: clamp(22px,6vw,52px);
+  color: var(--accent3); letter-spacing: 0.06em; line-height: 1;
   text-shadow: 0 0 18px rgba(255,255,0,0.4), 0 0 40px rgba(255,255,0,0.15);
 }
-.terminal-header p { color: var(--green-dim); font-size: clamp(9px,1.6vw,12px); margin-top: 4px; }
-.cursor { display:inline-block; width:clamp(8px,1.5vw,12px); height:1.1em; background:var(--cursor,var(--green)); vertical-align:bottom; margin-left:3px; animation:blink 1.1s step-start infinite; }
+[data-theme="terminal"] .header-title em { font-style: normal; }
+[data-theme="terminal"] .header-sub { color: var(--text-dim); font-size: clamp(9px,1.6vw,12px); margin-top: 4px; }
+
+/* cursor blink (terminal only) */
+.t-cursor { display: none; }
+[data-theme="terminal"] .t-cursor {
+  display: inline-block; width: clamp(8px,1.5vw,12px); height: 1.1em;
+  background: var(--accent1); vertical-align: bottom; margin-left: 3px;
+  animation: blink 1.1s step-start infinite;
+}
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-/* ── SYNC BAR ── */
-.sync-bar {
-  display: flex; align-items: center; flex-wrap: wrap; gap: clamp(4px,1vw,8px);
-  padding: clamp(5px,1.2vw,9px) clamp(10px,3vw,20px);
-  background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--green-dk);
-  font-size: clamp(8px,1.4vw,11px);
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+/* ════════════════════════════════════════════════
+   SYNC STATUS
+════════════════════════════════════════════════ */
+/* Modern pill */
+[data-theme="modern"] .sync-wrap {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 999px; padding: 5px 14px;
+  font-size: 12px; color: var(--text-dim);
 }
-.sync-label { color: var(--grey); letter-spacing: 0.06em; margin-right: 2px; }
-.sync-status {
-  display: flex; align-items: center; gap: 5px;
-  padding: 2px 8px; border: 1px solid var(--green-dk);
-  font-size: clamp(8px,1.4vw,11px); min-width: 160px;
+/* Terminal style */
+[data-theme="terminal"] .sync-wrap {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+  padding: 3px 10px; font-size: clamp(8px,1.4vw,11px); color: var(--text-dim);
 }
-.sync-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--grey); }
-.sync-dot.ok     { background:var(--green); box-shadow:0 0 6px var(--green); }
-.sync-dot.saving { background:var(--yellow); box-shadow:0 0 6px var(--yellow); animation:pulse .6s ease-in-out infinite alternate; }
-.sync-dot.error  { background:var(--red); box-shadow:0 0 6px var(--red); }
-.sync-dot.local  { background:var(--grey); }
-@keyframes pulse { from{opacity:0.5} to{opacity:1} }
-#syncMsg { color: var(--green-dim); }
 
+.sync-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--text-dim); transition: background 0.3s;
+}
+.sync-dot.ok     { background: var(--accent2); box-shadow: 0 0 6px rgba(107,124,94,0.5); }
+.sync-dot.saving { background: var(--accent3); animation: dpulse 0.7s ease-in-out infinite alternate; }
+.sync-dot.error  { background: var(--danger); }
+[data-theme="terminal"] .sync-dot.ok { box-shadow: 0 0 6px var(--accent2); }
+@keyframes dpulse { from{opacity:0.4} to{opacity:1} }
 
-
-/* ── TOOLBAR ── */
+/* ════════════════════════════════════════════════
+   TOOLBAR
+════════════════════════════════════════════════ */
 .toolbar {
-  display:flex; flex-wrap:wrap; gap:clamp(4px,1vw,8px);
-  padding:clamp(6px,1.5vw,10px) clamp(10px,3vw,20px);
-  border-bottom:1px solid var(--green-dk); margin-bottom:clamp(8px,2vw,14px);
-  align-items:center;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: clamp(8px,1.5vw,12px) clamp(16px,4vw,40px);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  transition: background 0.35s;
 }
-.toolbar-label { color:var(--grey); font-size:clamp(8px,1.4vw,11px); letter-spacing:0.06em; margin-right:4px; }
-.btn {
-  background:var(--bg3); border:1px solid var(--green-dim); color:var(--white);
-  font-family:var(--font); font-size:clamp(9px,1.5vw,12px);
-  padding:clamp(2px,0.5vw,4px) clamp(6px,1.5vw,12px);
-  cursor:pointer; letter-spacing:0.04em; transition:background 0.1s,color 0.1s,border-color 0.1s; white-space:nowrap;
+.toolbar-label {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-dim); margin-right: 4px;
 }
-.btn:hover { background:var(--green-dk); color:var(--yellow); border-color:var(--yellow); }
-.btn.level-btn { border-color:var(--grey); color:var(--grey); }
-.btn.level-btn:hover { border-color:var(--green); color:var(--green); background:var(--green-dk); }
-.btn.level-btn.active { border-color:var(--cyan); color:var(--cyan); background:rgba(0,255,204,0.08); }
-.sep { color:var(--green-dk); padding:0 4px; }
+[data-theme="terminal"] .toolbar-label { color: var(--text-dim); }
 
-/* ── LEGEND ── */
+/* shared button base */
+.tbtn {
+  font-family: var(--font); cursor: pointer; transition: all 0.15s;
+  white-space: nowrap;
+}
+
+/* Modern button */
+[data-theme="modern"] .tbtn {
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim);
+  font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: var(--radius);
+}
+[data-theme="modern"] .tbtn:hover { background: var(--border); color: var(--text-hi); border-color: var(--border-hi); }
+[data-theme="modern"] .tbtn.active { background: var(--accent1); color: #fff; border-color: var(--accent1); }
+[data-theme="modern"] .tbtn.accent { background: var(--text-hi); color: #fff; border-color: var(--text-hi); }
+[data-theme="modern"] .tbtn.accent:hover { background: var(--accent1); }
+
+/* Terminal button */
+[data-theme="terminal"] .tbtn {
+  background: var(--bg3); border: 1px solid var(--border-hi); color: var(--text);
+  font-size: clamp(9px,1.5vw,12px); padding: clamp(2px,0.5vw,4px) clamp(6px,1.5vw,12px);
+  letter-spacing: 0.04em;
+}
+[data-theme="terminal"] .tbtn::before { content: '['; }
+[data-theme="terminal"] .tbtn::after  { content: ']'; }
+[data-theme="terminal"] .tbtn:hover { background: var(--border); color: var(--accent3); border-color: var(--accent3); }
+[data-theme="terminal"] .tbtn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(0,255,204,0.08); }
+[data-theme="terminal"] .tbtn.accent { border-color: var(--accent2); color: var(--accent2); }
+
+.toolbar-sep {
+  width: 1px; height: 20px; background: var(--border); margin: 0 4px;
+}
+[data-theme="terminal"] .toolbar-sep { background: var(--border); }
+
+/* ════════════════════════════════════════════════
+   LEGEND
+════════════════════════════════════════════════ */
 .legend {
-  display:flex; flex-wrap:wrap; gap:clamp(8px,2vw,16px);
-  padding:clamp(4px,1vw,8px) clamp(10px,3vw,20px);
-  border-bottom:1px solid var(--green-dk);
-  font-size:clamp(8px,1.5vw,11px);
+  padding: clamp(8px,1.5vw,10px) clamp(16px,4vw,40px);
+  display: flex; gap: 20px; flex-wrap: wrap;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  font-size: 12px;
 }
-.leg { display:flex; align-items:center; gap:5px; }
-.leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.leg span { color:var(--grey); }
+.leg { display: flex; align-items: center; gap: 6px; color: var(--text-dim); }
+.leg-swatch {
+  width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+}
+[data-theme="terminal"] .leg-swatch { border-radius: 0; }
 
-/* ── TREE ── */
-.tree { padding:clamp(6px,2vw,14px) clamp(10px,3vw,20px); }
-.u-block { margin-bottom: 2px; }
-.u-row { display:flex; align-items:flex-start; gap:0; }
-.u-pipes { flex-shrink:0; color:var(--green-dim); white-space:pre; font-size:clamp(11px,2vw,14px); line-height:1.5; user-select:none; padding-top:1px; }
-.u-content { flex:1; min-width:0; }
-.u-toggle { display:inline-block; background:none; border:none; color:var(--white); font-family:var(--font); font-size:clamp(11px,2vw,14px); cursor:pointer; padding:0 4px 0 0; line-height:1.5; flex-shrink:0; transition:color 0.1s; user-select:none; }
-.u-toggle:hover { color:var(--yellow); }
-.u-toggle.leaf { color:var(--green-dk); cursor:default; }
-.u-member { color:var(--yellow); font-size:clamp(11px,2vw,14px); display:inline; text-shadow:0 0 8px rgba(255,255,0,0.25); }
-.u-member.late::after { content:' †'; color:var(--grey); font-size:.85em; }
-.u-dates { color:var(--grey); font-size:clamp(9px,1.5vw,11px); margin-left:4px; }
-.u-spouse-line { color:var(--green-dim); font-size:clamp(10px,1.8vw,13px); margin-left:clamp(14px,3vw,22px); display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
-.u-spouse-label { color:var(--grey); }
-.u-spouse-name  { color:var(--green); }
-.u-note { color:var(--grey); font-size:clamp(8px,1.4vw,11px); margin-left:clamp(14px,3vw,22px); font-style:italic; }
-.u-actions { display:inline-flex; gap:3px; margin-left:8px; opacity:0; transition:opacity 0.15s; vertical-align:middle; }
-.u-content:hover .u-actions, .u-content:focus-within .u-actions { opacity:1; }
-@media (max-width:520px) { .u-actions { opacity:1; } }
-.act-btn { background:none; border:1px solid var(--green-dk); color:var(--green-dim); font-family:var(--font); font-size:clamp(8px,1.3vw,10px); padding:0px 4px; cursor:pointer; transition:color 0.1s,border-color 0.1s; white-space:nowrap; line-height:1.6; }
-.act-btn:hover { color:var(--yellow); border-color:var(--yellow); }
-.act-btn.danger:hover { color:var(--red); border-color:var(--red); }
-.u-children { overflow:hidden; }
-.u-children.collapsed { display:none; }
+/* ════════════════════════════════════════════════
+   TREE WRAPPER
+════════════════════════════════════════════════ */
+.tree-wrap { padding: clamp(16px,3vw,32px) clamp(16px,4vw,40px); }
 
-.section-head { color:var(--cyan); font-size:clamp(10px,2vw,13px); letter-spacing:0.06em; padding:clamp(8px,1.5vw,12px) 0 clamp(4px,1vw,6px); border-top:1px solid var(--green-dk); margin-top:clamp(6px,1.5vw,12px); display:flex; align-items:center; gap:8px; }
-.section-head::before { content:'>> '; color:var(--green-dim); }
+/* Section banner */
+.section-banner {
+  display: flex; align-items: center; gap: 16px;
+  margin: 32px 0 20px;
+}
+.section-banner:first-child { margin-top: 0; }
+.banner-line { flex: 1; height: 1px; background: var(--border); }
 
-/* ── MODAL ── */
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; }
-.modal-overlay.active { display:flex; }
-.modal { background:var(--bg2); border:1px solid var(--green-dim); box-shadow:0 0 30px rgba(51,255,51,0.15),0 0 80px rgba(51,255,51,0.05); padding:clamp(14px,3vw,24px); width:100%; max-width:480px; max-height:90vh; overflow-y:auto; font-family:var(--font); }
-.modal-title { font-family:var(--font-hdr); font-size:clamp(16px,4vw,28px); color:var(--yellow); margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--green-dk); letter-spacing:0.06em; }
-.modal-title::before { content:'> '; color:var(--green-dim); }
-.fg { margin-bottom:10px; }
-.fg label { display:block; color:var(--grey); font-size:clamp(8px,1.4vw,10px); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:3px; }
-.fg label::before { content:'# '; color:var(--green-dk); }
-.fg input,.fg select,.fg textarea { width:100%; background:var(--bg3); border:1px solid var(--green-dk); color:var(--green); font-family:var(--font); font-size:clamp(10px,1.8vw,13px); padding:5px 8px; outline:none; transition:border-color 0.15s; border-radius:0; -webkit-appearance:none; }
-.fg input:focus,.fg select:focus,.fg textarea:focus { border-color:var(--green); box-shadow:0 0 6px rgba(51,255,51,0.2); }
-.fg select option { background:var(--bg3); }
-.fg textarea { resize:vertical; min-height:54px; }
-.fg-hint { font-size:clamp(7px,1.2vw,9px); color:var(--grey); margin-top:3px; }
-.fg-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.modal-actions { display:flex; gap:6px; justify-content:flex-end; margin-top:14px; padding-top:10px; border-top:1px solid var(--green-dk); flex-wrap:wrap; }
-.mbtn { background:var(--bg3); border:1px solid var(--green-dim); color:var(--green); font-family:var(--font); font-size:clamp(9px,1.6vw,12px); padding:5px 14px; cursor:pointer; letter-spacing:0.04em; transition:all 0.1s; }
-.mbtn:hover { background:var(--green-dk); color:var(--yellow); border-color:var(--yellow); }
-.mbtn.primary { border-color:var(--yellow); color:var(--yellow); }
-.mbtn.primary:hover { background:rgba(255,255,0,0.15); }
-.mbtn.danger { border-color:var(--red); color:var(--red); margin-right:auto; }
-.mbtn.danger:hover { background:rgba(255,68,68,0.15); }
-.mbtn.cancel { border-color:var(--grey); color:var(--grey); }
+[data-theme="modern"] .banner-text {
+  font-family: var(--serif); font-size: 15px; font-weight: 400;
+  font-style: italic; color: var(--accent1); white-space: nowrap;
+}
+[data-theme="terminal"] .banner-text {
+  font-family: var(--font); font-size: clamp(10px,2vw,13px);
+  letter-spacing: 0.06em; color: var(--accent2); white-space: nowrap;
+}
+[data-theme="terminal"] .banner-text::before { content: '>> '; color: var(--text-dim); }
 
-/* ── TOAST ── */
+/* ════════════════════════════════════════════════
+   MEMBER CARDS  — MODERN
+════════════════════════════════════════════════ */
+.u-block { position: relative; }
+.u-row   { display: flex; align-items: flex-start; }
+
+/* Modern connector */
+[data-theme="modern"] .u-connector {
+  flex-shrink: 0; width: 32px; position: relative;
+  align-self: stretch; min-height: 36px;
+}
+[data-theme="modern"] .u-connector::before {
+  content: ''; position: absolute; left: 14px; top: 0; bottom: 0;
+  width: 1px; background: var(--border);
+}
+[data-theme="modern"] .u-connector.last::before { height: 18px; bottom: auto; }
+[data-theme="modern"] .u-connector::after {
+  content: ''; position: absolute; left: 14px; top: 18px;
+  width: 14px; height: 1px; background: var(--border);
+}
+
+/* Terminal connector (pipes) */
+[data-theme="terminal"] .u-connector {
+  flex-shrink: 0; color: var(--border-hi); white-space: pre;
+  font-size: clamp(11px,2vw,14px); line-height: 1.5; user-select: none; padding-top: 1px;
+  font-family: var(--font);
+}
+
+.u-body { flex: 1; min-width: 0; padding-bottom: 6px; }
+
+/* ── Modern card ── */
+[data-theme="modern"] .u-card {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 7px 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  max-width: 100%;
+}
+[data-theme="modern"] .u-card:hover { border-color: var(--border-hi); box-shadow: var(--shadow); }
+
+/* ── Terminal card (inline, no box) ── */
+[data-theme="terminal"] .u-card {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; padding: 0;
+}
+
+/* Avatar (modern only) */
+.member-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 13px; font-weight: 600;
+  flex-shrink: 0; letter-spacing: -0.02em;
+}
+[data-theme="modern"] .avatar-m    { background: rgba(139,111,71,0.12); color: var(--accent1); }
+[data-theme="modern"] .avatar-f    { background: rgba(196,168,130,0.2); color: var(--text-hi); }
+[data-theme="modern"] .avatar-u    { background: var(--bg3); color: var(--text-dim); }
+[data-theme="modern"] .avatar-late { opacity: 0.55; }
+[data-theme="terminal"] .member-avatar { display: none; }
+
+/* Member name */
+.member-name {
+  font-family: var(--serif); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-theme="modern"] .member-name { font-size: 17px; font-weight: 500; color: var(--text-hi); }
+[data-theme="modern"] .member-name.late { color: var(--text-dim); }
+[data-theme="modern"] .member-name .dagger { font-size: 12px; color: var(--border-hi); margin-left: 3px; }
+[data-theme="modern"] .member-nick { font-style: italic; font-size: 13px; color: var(--border-hi); margin-left: 4px; }
+[data-theme="terminal"] .member-name { font-size: clamp(11px,2vw,14px); color: var(--accent3); text-shadow: 0 0 8px rgba(255,255,0,0.25); font-family: var(--font); }
+[data-theme="terminal"] .member-name.late { color: var(--text-dim); }
+[data-theme="terminal"] .member-name.late::after { content: ' †'; color: var(--text-dim); font-size: .85em; }
+[data-theme="terminal"] .member-nick { color: var(--border-hi); margin-left: 4px; font-size: clamp(10px,1.8vw,13px); }
+
+.member-dates { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+[data-theme="terminal"] .member-dates { font-size: clamp(9px,1.5vw,11px); color: var(--text-dim); margin-left: 4px; display: inline; }
+
+/* Toggle button */
+.toggle-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; line-height: 1;
+}
+.toggle-btn.leaf { cursor: default; }
+[data-theme="modern"] .toggle-btn {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--accent1); font-size: 14px; font-weight: 300;
+}
+[data-theme="modern"] .toggle-btn:hover { background: var(--border); border-color: var(--border-hi); }
+[data-theme="modern"] .toggle-btn.leaf { opacity: 0.3; }
+[data-theme="terminal"] .toggle-btn {
+  color: var(--text); font-size: clamp(11px,2vw,14px); padding: 0 4px 0 0;
+}
+[data-theme="terminal"] .toggle-btn.leaf { color: var(--border); }
+[data-theme="terminal"] .toggle-btn:hover { color: var(--accent3); }
+
+/* Action buttons */
+.u-actions {
+  display: inline-flex; gap: 3px; margin-left: 8px;
+  opacity: 0; transition: opacity 0.15s; vertical-align: middle;
+}
+.u-card:hover .u-actions, .u-card:focus-within .u-actions { opacity: 1; }
+@media (max-width: 520px) { .u-actions { opacity: 1; } }
+
+.act-btn {
+  font-family: var(--font); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+[data-theme="modern"] .act-btn {
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim);
+  font-size: 11px; padding: 2px 8px; border-radius: 6px;
+}
+[data-theme="modern"] .act-btn:hover { background: var(--border); color: var(--text-hi); border-color: var(--border-hi); }
+[data-theme="modern"] .act-btn.danger:hover { background: rgba(184,92,56,0.1); color: var(--danger); border-color: var(--danger); }
+[data-theme="terminal"] .act-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  font-size: clamp(8px,1.3vw,10px); padding: 0px 4px; line-height: 1.6;
+}
+[data-theme="terminal"] .act-btn:hover { color: var(--accent3); border-color: var(--accent3); }
+[data-theme="terminal"] .act-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ════════════════════════════════════════════════
+   SPOUSE ROW
+════════════════════════════════════════════════ */
+/* Modern */
+[data-theme="modern"] .u-spouse-row {
+  display: flex; align-items: center; gap: 8px; margin: 4px 0;
+}
+[data-theme="modern"] .spouse-connector { width: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; }
+[data-theme="modern"] .spouse-connector-inner { width: 14px; height: 1px; background: var(--border); position: relative; }
+[data-theme="modern"] .spouse-connector-inner::before {
+  content: ''; position: absolute; right: 0; top: -3px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--border-hi); opacity: 0.5;
+}
+[data-theme="modern"] .spouse-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(107,124,94,0.07); border: 1px solid rgba(107,124,94,0.2);
+  border-radius: var(--radius); padding: 5px 11px;
+}
+[data-theme="modern"] .spouse-label { color: var(--accent2); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+[data-theme="modern"] .spouse-name  { font-family: var(--serif); font-size: 16px; color: var(--text-hi); }
+[data-theme="modern"] .spouse-myr   { font-size: 11px; color: var(--text-dim); margin-left: 2px; }
+
+/* Terminal */
+[data-theme="terminal"] .u-spouse-row {
+  display: flex; align-items: center; gap: 0; margin: 0;
+  color: var(--border-hi); font-size: clamp(10px,1.8vw,13px);
+}
+[data-theme="terminal"] .spouse-connector { display: none; }
+[data-theme="terminal"] .spouse-connector-inner { display: none; }
+[data-theme="terminal"] .spouse-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: none; padding: 0;
+}
+[data-theme="terminal"] .spouse-label { color: var(--text-dim); font-size: inherit; text-transform: none; letter-spacing: 0; font-weight: normal; }
+[data-theme="terminal"] .spouse-name  { color: var(--spouse-color); font-family: var(--font); font-size: inherit; }
+[data-theme="terminal"] .spouse-myr   { color: var(--text-dim); font-size: inherit; }
+[data-theme="terminal"] .spouse-pipes { color: var(--border); font-family: var(--font); white-space: pre; user-select: none; }
+
+/* Note */
+.u-note { font-style: italic; color: var(--text-dim); }
+[data-theme="modern"] .u-note { margin: 2px 0 4px 32px; font-size: 12px; padding-left: 4px; border-left: 2px solid var(--border); }
+[data-theme="terminal"] .u-note { font-size: clamp(8px,1.4vw,11px); }
+[data-theme="terminal"] .u-note .note-pipes { color: var(--border); font-family: var(--font); white-space: pre; user-select: none; }
+
+/* Children */
+.u-children { overflow: hidden; }
+.u-children.collapsed { display: none; }
+[data-theme="modern"] .u-children { padding-left: 32px; }
+[data-theme="terminal"] .u-children { padding-left: 0; }
+
+/* ════════════════════════════════════════════════
+   MODAL
+════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000; padding: 16px;
+}
+.modal-overlay.active { display: flex; }
+[data-theme="modern"] .modal-overlay { background: rgba(30,22,18,0.5); backdrop-filter: blur(4px); }
+[data-theme="terminal"] .modal-overlay { background: rgba(0,0,0,0.85); }
+
+.modal {
+  background: var(--bg2); border: 1px solid var(--border-hi);
+  box-shadow: var(--shadow-lg);
+  padding: clamp(16px,3vw,28px);
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+  font-family: var(--font);
+}
+[data-theme="modern"] .modal { border-radius: 16px; }
+
+.modal-title {
+  font-family: var(--serif); margin-bottom: 18px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+[data-theme="modern"] .modal-title { font-size: 26px; font-weight: 400; color: var(--text-hi); }
+[data-theme="terminal"] .modal-title { font-size: clamp(16px,4vw,28px); color: var(--accent3); letter-spacing: 0.06em; }
+[data-theme="terminal"] .modal-title::before { content: '> '; color: var(--text-dim); }
+
+.fg { margin-bottom: 12px; }
+.fg label {
+  display: block; font-size: 11px; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent1); margin-bottom: 4px;
+}
+[data-theme="terminal"] .fg label { color: var(--text-dim); }
+[data-theme="terminal"] .fg label::before { content: '# '; color: var(--border); }
+.fg input, .fg select, .fg textarea {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text); font-family: var(--font); font-size: 13px;
+  padding: 7px 11px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus {
+  border-color: var(--accent1);
+  box-shadow: 0 0 0 3px rgba(139,111,71,0.12);
+}
+[data-theme="terminal"] .fg input:focus, [data-theme="terminal"] .fg select:focus,
+[data-theme="terminal"] .fg textarea:focus { box-shadow: 0 0 6px rgba(51,255,51,0.2); }
+.fg textarea { resize: vertical; min-height: 60px; }
+.fg-hint { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--border); flex-wrap: wrap;
+}
+.mbtn {
+  font-family: var(--font); cursor: pointer; transition: all 0.15s;
+  font-size: 13px; padding: 7px 16px;
+}
+[data-theme="modern"] .mbtn {
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text-hi);
+  border-radius: 8px; font-weight: 500;
+}
+[data-theme="modern"] .mbtn:hover { background: var(--border); }
+[data-theme="modern"] .mbtn.primary { background: var(--text-hi); color: #fff; border-color: var(--text-hi); }
+[data-theme="modern"] .mbtn.primary:hover { background: var(--accent1); border-color: var(--accent1); }
+[data-theme="modern"] .mbtn.danger { background: rgba(184,92,56,0.08); color: var(--danger); border-color: rgba(184,92,56,0.3); margin-right: auto; }
+[data-theme="modern"] .mbtn.danger:hover { background: rgba(184,92,56,0.15); }
+[data-theme="modern"] .mbtn.cancel { color: var(--text-dim); }
+[data-theme="terminal"] .mbtn {
+  background: var(--bg3); border: 1px solid var(--border-hi); color: var(--accent1);
+  letter-spacing: 0.04em; font-size: clamp(9px,1.6vw,12px); padding: 5px 14px;
+}
+[data-theme="terminal"] .mbtn:hover { background: var(--border); color: var(--accent3); border-color: var(--accent3); }
+[data-theme="terminal"] .mbtn.primary { border-color: var(--accent3); color: var(--accent3); }
+[data-theme="terminal"] .mbtn.primary:hover { background: rgba(255,255,0,0.1); }
+[data-theme="terminal"] .mbtn.danger { border-color: var(--danger); color: var(--danger); margin-right: auto; }
+[data-theme="terminal"] .mbtn.danger:hover { background: rgba(255,68,68,0.15); }
+[data-theme="terminal"] .mbtn.cancel { border-color: var(--text-dim); color: var(--text-dim); }
+
+/* ════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════ */
 .toast {
-  position:fixed; bottom:20px; right:20px; z-index:2000;
-  background:var(--bg2); border:1px solid var(--green-dim);
-  color:var(--green); font-family:var(--font); font-size:clamp(9px,1.6vw,12px);
-  padding:8px 16px; max-width:320px;
-  transform:translateY(80px); opacity:0;
-  transition:transform 0.25s,opacity 0.25s;
-  box-shadow:0 0 20px rgba(51,255,51,0.2);
+  position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+  font-family: var(--font); font-size: 13px;
+  padding: 10px 18px; max-width: 320px;
+  transform: translateY(80px); opacity: 0;
+  transition: transform 0.25s, opacity 0.25s;
 }
-.toast.show { transform:translateY(0); opacity:1; }
-.toast.error { border-color:var(--red); color:var(--red); box-shadow:0 0 20px rgba(255,68,68,0.2); }
-.toast.warn  { border-color:var(--orange); color:var(--orange); }
+.toast.show { transform: translateY(0); opacity: 1; }
+[data-theme="modern"] .toast { background: var(--text-hi); color: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(92,65,35,0.3); }
+[data-theme="modern"] .toast.error { background: var(--danger); }
+[data-theme="modern"] .toast.warn  { background: var(--accent3); color: var(--text); }
+[data-theme="terminal"] .toast { background: var(--bg2); border: 1px solid var(--border-hi); color: var(--accent1); box-shadow: 0 0 20px rgba(51,255,51,0.2); }
+[data-theme="terminal"] .toast.error { border-color: var(--danger); color: var(--danger); }
+[data-theme="terminal"] .toast.warn  { border-color: var(--accent3); color: var(--accent3); }
 
-footer { border-top:1px solid var(--green-dk); padding:clamp(8px,2vw,14px) clamp(10px,3vw,20px); margin-top:clamp(14px,3vw,24px); color:var(--grey); font-size:clamp(8px,1.4vw,11px); }
-footer::before { content:'C:\\> '; color:var(--green-dk); }
-@media (max-width:360px) { .fg-row { grid-template-columns:1fr; } }
-
-/* Subscribe modal tabs */
+/* ════════════════════════════════════════════════
+   SUBSCRIBE MODAL TABS
+════════════════════════════════════════════════ */
 .sub-tab {
-  background:none; border:none; border-bottom:2px solid transparent;
-  color:var(--grey); font-family:var(--font); font-size:clamp(9px,1.5vw,12px);
-  padding:4px 12px 8px; cursor:pointer; letter-spacing:.04em;
-  transition:color .1s,border-color .1s; margin-bottom:-1px;
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font); font-size: 13px; font-weight: 500;
+  padding: 6px 14px 10px; cursor: pointer; transition: all 0.15s; margin-bottom: -1px;
+  color: var(--text-dim);
 }
-.sub-tab.active { color:var(--cyan); border-bottom-color:var(--cyan); }
-.sub-tab:hover  { color:var(--yellow); }
+.sub-tab.active { color: var(--accent1); border-bottom-color: var(--accent1); }
+.sub-tab:hover  { color: var(--text-hi); }
+[data-theme="terminal"] .sub-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+[data-theme="terminal"] .sub-tab:hover  { color: var(--accent3); }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: clamp(14px,2.5vw,20px) clamp(16px,4vw,40px);
+  margin-top: clamp(24px,4vw,40px);
+  color: var(--text-dim); font-size: 12px; text-align: center;
+}
+[data-theme="terminal"] footer::before { content: 'C:\\> '; color: var(--border); }
+
+@media (max-width: 600px) {
+  .site-header { padding: 16px 16px 14px; padding-right: 90px; }
+  .toolbar, .legend, .tree-wrap, footer { padding-left: 16px; padding-right: 16px; }
+  .fg-row { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 
-<div class="terminal-header">
-  <h1>EZIE FAMILY TREE<span class="cursor"></span></h1>
-  <p>// Living record of the Ezie lineage &nbsp;|&nbsp; Google Sheets is the single source of truth</p>
-</div>
+<!-- THEME TOGGLE -->
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
+  <div class="toggle-track"><div class="toggle-knob"></div></div>
+  <span class="toggle-label"></span>
+</button>
 
-<!-- SYNC STATUS BAR -->
-<div class="sync-bar">
-  <span class="sync-label">SHEETS:</span>
-  <div class="sync-status">
-    <div class="sync-dot local" id="syncDot"></div>
-    <span id="syncMsg">loading from database...</span>
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-left">
+    <div class="header-eyebrow">Family Record · Est. 2024</div>
+    <h1 class="header-title"><em>Ezie</em> Family Tree<span class="t-cursor"></span></h1>
+    <p class="header-sub">// A living record of the Ezie lineage &nbsp;|&nbsp; Google Sheets is the single source of truth</p>
   </div>
-  <span id="syncTime" style="color:var(--grey);font-size:clamp(8px,1.3vw,10px)"></span>
-  <button class="btn" onclick="refreshFromSheets()" style="margin-left:4px">[↻ REFRESH]</button>
-</div>
+  <div class="header-right">
+    <div class="sync-wrap">
+      <div class="sync-dot local" id="syncDot"></div>
+      <span id="syncMsg">Loading…</span>
+    </div>
+    <span id="syncTime" style="font-size:11px;color:var(--text-dim)"></span>
+  </div>
+</header>
 
-<div class="legend">
-  <div class="leg"><div class="leg-dot" style="background:#ffff00"></div><span>Family member (yellow)</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#33ff33"></div><span>Spouse / married in (green)</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#00ffcc"></div><span>Section header (cyan)</span></div>
-  <div class="leg"><div class="leg-dot" style="background:#e8ffe8"></div><span>[+]/[-] collapse (white)</span></div>
-</div>
-
+<!-- TOOLBAR -->
 <div class="toolbar">
-  <span class="toolbar-label">VIEW:</span>
-  <button class="btn level-btn" onclick="collapseToLevel(1)">[ L1 ]</button>
-  <button class="btn level-btn" onclick="collapseToLevel(2)">[ L2 ]</button>
-  <button class="btn level-btn" onclick="collapseToLevel(3)">[ L3 ]</button>
-  <button class="btn level-btn" onclick="collapseToLevel(4)">[ L4 ]</button>
-  <button class="btn level-btn active" onclick="expandAll()">[ ALL ]</button>
-  <span class="sep">|</span>
-  <button class="btn" id="alertsBtn" style="border-color:var(--cyan);color:var(--cyan)" onclick="openSubscribeModal()">[✉ ALERTS]</button>
+  <span class="toolbar-label">Show</span>
+  <button class="tbtn" onclick="collapseToLevel(1)">L1</button>
+  <button class="tbtn" onclick="collapseToLevel(2)">L2</button>
+  <button class="tbtn" onclick="collapseToLevel(3)">L3</button>
+  <button class="tbtn" onclick="collapseToLevel(4)">L4</button>
+  <button class="tbtn active" id="btn-all" onclick="expandAll()">All</button>
+  <div class="toolbar-sep"></div>
+  <button class="tbtn" onclick="refreshFromSheets()">↻ Refresh</button>
+  <button class="tbtn accent" onclick="openSubscribeModal()">✉ Alerts</button>
 </div>
 
-<div id="tree" class="tree"></div>
+<!-- LEGEND -->
+<div class="legend">
+  <div class="leg"><div class="leg-swatch" style="background:rgba(139,111,71,0.2);border:1px solid rgba(139,111,71,0.4)"></div>Family member</div>
+  <div class="leg"><div class="leg-swatch" style="background:rgba(107,124,94,0.15);border:1px solid rgba(107,124,94,0.4)"></div>Spouse / married in</div>
+  <div class="leg"><div class="leg-swatch" style="background:var(--border)"></div>Deceased</div>
+</div>
 
-<footer>Google Sheets is the single source of truth &nbsp;|&nbsp; Changes sync automatically &nbsp;|&nbsp; Ezie Family Tree v4.0</footer>
+<!-- TREE -->
+<div id="tree" class="tree-wrap"></div>
 
+<footer>Google Sheets is the single source of truth &nbsp;·&nbsp; Changes sync automatically &nbsp;·&nbsp; Ezie Family Tree v5.0</footer>
+
+<!-- EDIT MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
   <div class="modal">
-    <div class="modal-title" id="modalTitle">EDIT</div>
+    <div class="modal-title" id="modalTitle">Edit</div>
     <div id="modalBody"></div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <!-- SUBSCRIBE MODAL -->
 <div class="modal-overlay" id="subModal" onclick="closeSubModalOnOverlay(event)">
   <div class="modal">
-    <div class="modal-title" id="subModalTitle">✉ ALERT SUBSCRIPTIONS</div>
-    <div id="subModalBody">
-
-      <!-- Tab switcher -->
-      <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--green-dk)">
-        <button class="sub-tab active" id="tab-sub" onclick="switchSubTab('sub')">[SUBSCRIBE]</button>
-        <button class="sub-tab" id="tab-unsub" onclick="switchSubTab('unsub')">[UNSUBSCRIBE]</button>
+    <div class="modal-title">✉ Alert Subscriptions</div>
+    <div>
+      <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)">
+        <button class="sub-tab active" id="tab-sub" onclick="switchSubTab('sub')">Subscribe</button>
+        <button class="sub-tab" id="tab-unsub" onclick="switchSubTab('unsub')">Unsubscribe</button>
       </div>
-
-      <!-- SUBSCRIBE PANEL -->
       <div id="subPanel">
-        <div style="color:var(--grey);font-size:clamp(8px,1.4vw,11px);margin-bottom:12px;line-height:1.7">
-          // Get email alerts 2 days before, 1 day before, and on the day of:<br>
-          // 🎂 Birthdays &nbsp; 💍 Wedding anniversaries &nbsp; 🕯️ Death remembrances<br>
-          // Emails sent at 6am. Unsubscribe any time.
-        </div>
-        <div class="form-group">
-          <label>Your Name</label>
-          <input type="text" id="subName" placeholder="e.g. Cynthia Ezie">
-        </div>
-        <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" id="subEmail" placeholder="e.g. you@email.com">
-        </div>
-        <div class="form-group" style="margin-top:4px">
-          <div style="font-size:clamp(7px,1.2vw,10px);color:var(--grey)">
-            // To receive anniversary alerts, make sure spouses have a<br>
-            // <span style="color:var(--cyan)">Marriage Date</span> (day + month) set in their edit form.
-          </div>
-        </div>
+        <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;line-height:1.7">Get email reminders 2 days before, 1 day before, and on the day of birthdays, wedding anniversaries, and remembrances. Emails sent at 6 am.</p>
+        <div class="fg"><label>Your Name</label><input type="text" id="subName" placeholder="e.g. Cynthia Ezie"></div>
+        <div class="fg"><label>Email Address</label><input type="email" id="subEmail" placeholder="e.g. you@email.com"></div>
         <div class="modal-actions">
-          <button class="mbtn cancel" onclick="closeSubModal()">[CANCEL]</button>
-          <button class="mbtn primary" onclick="submitSubscribe()">[SUBSCRIBE]</button>
+          <button class="mbtn cancel" onclick="closeSubModal()">Cancel</button>
+          <button class="mbtn primary" onclick="submitSubscribe()">Subscribe</button>
         </div>
       </div>
-
-      <!-- UNSUBSCRIBE PANEL -->
       <div id="unsubPanel" style="display:none">
-        <div style="color:var(--grey);font-size:clamp(8px,1.4vw,11px);margin-bottom:12px">
-          // Enter the email you subscribed with to opt out of all alerts.
-        </div>
-        <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" id="unsubEmail" placeholder="e.g. you@email.com">
-        </div>
+        <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">Enter your email to opt out of all alerts.</p>
+        <div class="fg"><label>Email Address</label><input type="email" id="unsubEmail" placeholder="e.g. you@email.com"></div>
         <div class="modal-actions">
-          <button class="mbtn cancel" onclick="closeSubModal()">[CANCEL]</button>
-          <button class="mbtn danger" onclick="submitUnsubscribe()">[UNSUBSCRIBE]</button>
+          <button class="mbtn cancel" onclick="closeSubModal()">Cancel</button>
+          <button class="mbtn danger" onclick="submitUnsubscribe()">Unsubscribe</button>
         </div>
       </div>
-
     </div>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 // ================================================================
 // CONFIG
 // ================================================================
 const SCRIPT_URL_LIVE = 'https://script.google.com/macros/s/AKfycbzWJ0xpgOsIyHVmpuqSwwo3otQ_wgDAy-2kQ8OoqHXPqQJhbPuc9N6j0UXRkyGnNzEz/exec';
-
-// How long to wait after the last edit before pushing to Sheets (ms)
 const AUTO_SYNC_DELAY = 4000;
+
+// ================================================================
+// THEME TOGGLE
+// ================================================================
+const THEME_KEY = 'ezie_theme_v1';
+
+function getTheme(){ return document.documentElement.getAttribute('data-theme') || 'modern'; }
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem(THEME_KEY, t); } catch(e){}
+  renderTree(); // re-render so connectors/pipes update
+}
+
+function toggleTheme(){
+  applyTheme(getTheme() === 'modern' ? 'terminal' : 'modern');
+}
+
+// Load saved preference on startup
+(function(){
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if(saved === 'terminal' || saved === 'modern'){
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  } catch(e){}
+})();
 
 // ================================================================
 // STATE
@@ -313,348 +733,255 @@ const AUTO_SYNC_DELAY = 4000;
 let familyData    = [];
 let nextId        = 2000;
 let autoSyncTimer = null;
-let sheetsLoaded  = false;   // true once we have confirmed Sheets data
+let sheetsLoaded  = false;
 
 function uid(){ return ++nextId; }
 
 // ================================================================
 // SHEETS — SINGLE SOURCE OF TRUTH
 // ================================================================
-
-// Called on page load and by the [↻ REFRESH] button.
-// ALWAYS fetches from Sheets. Never falls back to seed data.
 async function loadFromSheets(silent=false){
-  setSyncStatus('saving','loading...');
+  setSyncStatus('saving','Loading…');
   try {
     const res  = await fetch(SCRIPT_URL_LIVE + '?action=load&ts=' + Date.now());
     const json = await res.json();
-
     if(json.status === 'ok' && json.data){
-      // Normalise: v1 returns array, v2 returns {tree:[...]}
-      const raw = Array.isArray(json.data) ? json.data
-                : (json.data.tree || json.data);
-      familyData  = raw;
+      const raw = Array.isArray(json.data) ? json.data : (json.data.tree || json.data);
+      familyData   = raw;
       if(json.nextId) nextId = json.nextId;
       sheetsLoaded = true;
-
-      // Write-through cache — ONLY so the next load is instant while
-      // the fetch is in-flight. This cache is NEVER used as source of truth.
-      cacheWrite();
-      renderTree();
-      setSyncStatus('ok', 'live ✓');
-      setLastSync();
+      cacheWrite(); renderTree();
+      setSyncStatus('ok', 'Live'); setLastSync();
       if(!silent) toast('Tree loaded from Google Sheets');
     } else if(json.data === null){
-      setSyncStatus('warn','sheet empty');
-      toast('No data in Google Sheets yet.','warn');
+      setSyncStatus('warn','Sheet empty'); toast('No data in Google Sheets yet.','warn');
     } else {
-      setSyncStatus('error', json.message || 'load error');
-      if(!silent) toast('Load failed: ' + (json.message||'unknown'), 'error');
+      setSyncStatus('error', json.message || 'Load error');
+      if(!silent) toast('Load failed: '+(json.message||'unknown'), 'error');
     }
-  } catch(e) {
-    setSyncStatus('error','cannot reach Sheets');
-    toast('Cannot reach Google Sheets: ' + e.message, 'error');
+  } catch(e){
+    setSyncStatus('error','Cannot reach Sheets');
+    toast('Cannot reach Google Sheets: '+e.message, 'error');
   }
 }
+function refreshFromSheets(){ loadFromSheets(false); }
 
-// Public [↻ REFRESH] button handler
-function refreshFromSheets(){
-  loadFromSheets(false);
-}
-
-// Push current in-memory state to Sheets.
-// Called automatically after every edit (debounced).
 async function pushToSheets(auto=false){
-  // Guard: never push if we never successfully loaded from Sheets first.
-  // This prevents a browser with no data from overwriting the database.
-  if(!sheetsLoaded){
-    console.warn('pushToSheets blocked — Sheets not yet loaded on this session');
-    return;
-  }
-  setSyncStatus('saving', auto ? 'saving...' : 'pushing...');
+  if(!sheetsLoaded) return;
+  setSyncStatus('saving', auto ? 'Saving…' : 'Pushing…');
   try {
-    const res  = await fetch(SCRIPT_URL_LIVE, {
-      method:  'POST',
-      body:    JSON.stringify({ action:'save', data:familyData, nextId, savedBy: auto ? 'auto-sync' : 'manual' }),
-      headers: { 'Content-Type': 'text/plain' }
+    const res  = await fetch(SCRIPT_URL_LIVE,{
+      method:'POST',
+      body: JSON.stringify({action:'save', data:familyData, nextId, savedBy: auto?'auto-sync':'manual'}),
+      headers:{'Content-Type':'text/plain'}
     });
     const json = await res.json();
-    if(json.status === 'ok'){
-      setSyncStatus('ok', 'saved ✓');
-      setLastSync();
-      cacheWrite(); // keep cache fresh
-      if(!auto) toast('Saved to Google Sheets (' + json.rowCount + ' nodes)');
-    } else {
-      setSyncStatus('error', json.message);
-      toast('Save failed: ' + json.message, 'error');
-    }
-  } catch(e) {
-    setSyncStatus('error','save failed');
-    toast('Save failed — check connection', 'error');
-  }
+    if(json.status==='ok'){ setSyncStatus('ok','Saved'); setLastSync(); cacheWrite(); if(!auto) toast('Saved ('+json.rowCount+' nodes)'); }
+    else { setSyncStatus('error',json.message); toast('Save failed: '+json.message,'error'); }
+  } catch(e){ setSyncStatus('error','Save failed'); toast('Save failed — check connection','error'); }
 }
 
 // ================================================================
-// WRITE-THROUGH CACHE
-// Used ONLY to pre-populate while the Sheets fetch is in-flight on reload.
-// The fetch always overwrites whatever is cached.
-// The seed() function is NEVER called — stale hardcoded data can never
-// enter the system.
+// CACHE
 // ================================================================
 const CACHE_KEY = 'ezie_cache_v5';
-
-function cacheWrite(){
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ data: familyData, nextId }));
-  } catch(e) {}
-}
-
+function cacheWrite(){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({data:familyData, nextId})); }catch(e){} }
 function cacheRead(){
-  try {
-    const r = localStorage.getItem(CACHE_KEY);
-    if(r){
-      const d = JSON.parse(r);
-      if(d && Array.isArray(d.data) && d.data.length > 0){
-        familyData = d.data;
-        nextId     = d.nextId || 2000;
-        return true;
-      }
-    }
-  } catch(e) {}
+  try{
+    const r=localStorage.getItem(CACHE_KEY);
+    if(r){ const d=JSON.parse(r); if(d&&Array.isArray(d.data)&&d.data.length>0){ familyData=d.data; nextId=d.nextId||2000; return true; } }
+  }catch(e){}
   return false;
 }
 
 // ================================================================
-// AUTO-SYNC — debounced push after every edit
+// AUTO-SYNC
 // ================================================================
-function scheduleAutoSync(){
-  clearTimeout(autoSyncTimer);
-  autoSyncTimer = setTimeout(() => pushToSheets(true), AUTO_SYNC_DELAY);
-}
-
-// Called by every edit action (save, delete, add child, add spouse, etc.)
-function afterEdit(){
-  cacheWrite();   // instant local cache update
-  renderTree();   // instant UI update
-  scheduleAutoSync(); // push to Sheets after debounce
-}
+function scheduleAutoSync(){ clearTimeout(autoSyncTimer); autoSyncTimer=setTimeout(()=>pushToSheets(true),AUTO_SYNC_DELAY); }
+function afterEdit(){ cacheWrite(); renderTree(); scheduleAutoSync(); }
 
 // ================================================================
 // SYNC STATUS UI
 // ================================================================
-function setSyncStatus(state, msg){
-  const dot = document.getElementById('syncDot');
-  const txt = document.getElementById('syncMsg');
-  if(dot) dot.className = 'sync-dot ' + state;
-  if(txt) txt.textContent = msg;
+function setSyncStatus(state,msg){
+  const dot=document.getElementById('syncDot'), txt=document.getElementById('syncMsg');
+  if(dot) dot.className='sync-dot '+state;
+  if(txt) txt.textContent=msg;
 }
-function setLastSync(){
-  const el = document.getElementById('syncTime');
-  if(el) el.textContent = 'last sync ' + new Date().toLocaleTimeString();
-}
-
-function spouseLabel(g) {
-  if (g==='m') return 'and wife';
-  if (g==='f') return 'and husband';
-  return 'and spouse';
-}
-function P(fn,ln,nick,g,late,by,dy,bd,notes){
-  return{id:uid(),firstName:fn||'',lastName:ln||'',nickname:nick||'',
-         gender:g||'u',isLate:!!late,birthYear:by||'',deathYear:dy||'',
-         birthday:bd||'',notes:notes||''};
-}
-function SP(fn,ln,nick,g,late,by,dy,bd,notes,myr){
-  return{...P(fn,ln,nick,g,late,by,dy,bd,notes),marriageYear:myr||''};
-}
-function U(member,spouses,children,level){
-  return{id:uid(),member,spouses:spouses||[],children:children||[],level};
-}
-
-// ================================================================
-// SEED DATA
-// ================================================================
-function seed(){
-  familyData=[
-  U(P('Marcus','Ezie','Anuebunwa','m',true),[SP('Christiania','Nnaediekwe','Mgbeojirikwe','f',true)],
-  [
-    U(P('Edmund','Ezie','Obizukowa (Obi)','m',true,'1919','1995'),[SP('Patricia','Ubozoh','Nneoma','f',true,'','','','','1946')],
-    [
-      U(P('Fidelia','Ezie','','f'),[SP('Emma','Eze','','m')],[
-        U(P('Chuma','Eze','','m'),[SP('Chioma','Shiwobi','','f')],[],4),
-        U(P('Uzoma','Eze','','m'),[SP('Zenna','?????','','f')],[],4),
-        U(P('Ugochi','Eze','','f'),[SP('?????','Elinor','','m')],[],4),
-        U(P('Nkechi','Eze','','f'),[SP('Parker','Chidi','','m')],[],4),
-        U(P('Chinonye','Eze','','f'),[],[],4),
-        U(P('Maura','Eze','','f'),[],[],4),
-        U(P('Chisom','Eze','','f'),[],[],4),
-      ],3),
-      U(P('Justina','Ezie','','f'),[SP('Ogbuokiri','','','m')],[
-        U(P('Uche','','','u'),[],[],4),
-        U(P('Uju','','','u'),[],[],4),
-        U(P('Kelechi','','','f'),[SP('Chris','Lyonn','','m')],[],4),
-        U(P('Ginika','','','f'),[SP('?????','','','m')],[],4),
-        U(P('John Paul','','','m'),[],[],4),
-      ],3),
-      U(P('Imelda','Ezie','','f'),[SP('Jude','Nwoga','','m')],[
-        U(P('Tochi','','','u'),[],[],4),
-        U(P('Ugochi','','','f'),[],[],4),
-        U(P('Gosimuzo','','','u'),[],[],4),
-        U(P('Chiaka','','','f'),[],[],4),
-        U(P('Mmachi','','','u'),[],[],4),
-      ],3),
-      U(P('Michael','Ezie','','m',true),[SP('Leslie','Clapp','Allen','f')],[
-        U(P('Chinyere','Ezie','','f'),[],[],4),
-        U(P('Kelechi','Ezie','','u'),[],[],4),
-        U(P('Chisara','Ezie','','f'),[SP('?????','Bonsouer','','m')],[],4),
-        U(P('Chiemeka','Ezie','','m'),[],[],4),
-      ],3),
-      U(P('Joseph','Ezie','','m'),[SP('Ifeyinwa','Ojimba','','f')],[
-        U(P('Cynthia','Ezie','Chiamaka','f'),[SP('Gozie','Denwigwe','','m')],[],4),
-        U(P('Edmund','Ezie','Obinna U','m'),[SP('Kate','Ebie','Juliet','f')],[],4),
-        U(P('Chinenye','Ezie','Yvonne Amarachi','f'),[SP('Toritseju','Onwubiko','','m')],[],4),
-        U(P('Imelda','Ezie','Ifunanya','f'),[SP('Obiora','Anisiuba','','m')],[],4),
-        U(P('Joseph','Ezie','Chukwudalu','m'),[],[],4),
-      ],3),
-      U(P('Patrick','Ezie','','m'),[SP('Theodora','Igbo','Nkechi','f')],[
-        U(P('Patrick','','Chukwudi','m'),[],[],4),
-        U(P('Onyekachi','','Jacklyn','f'),[],[],4),
-        U(P('Munachi','','Jennifer','f'),[],[],4),
-        U(P('Chinedu','','Michael','m'),[],[],4),
-      ],3),
-      U(P('Maryjoe','Ezie','','f'),[SP('Fredrick','Ekwem','','m')],[
-        U(P('Amarachi','Ekwem','','f'),[SP('Patrick','Mgbam','','m')],[],4),
-        U(P('Nnamdi','Ekwem','','m'),[SP('Nnenna','?????','','f')],[],4),
-        U(P('Munachi','Ekwem','','f'),[],[],4),
-        U(P('Ezeanochie','','','u'),[],[],4),
-        U(P('Ozioma','Ekwem','','f'),[],[],4),
-      ],3),
-      U({id:uid(),firstName:'Simon',lastName:'Ezie',nickname:'',gender:'m',isLate:true,birthYear:'',deathYear:'',birthday:'',notes:'Died age 14'},[],[],3),
-      U({id:uid(),firstName:'Gloria',lastName:'Ezie',nickname:'',gender:'f',isLate:true,birthYear:'',deathYear:'',birthday:'',notes:'Died age 13'},[],[],3),
-      U(P('Benjamin','Ezie','Ekene','m',true),[SP('Njideka','Obijiaka','','f')],[],3),
-    ],2),
-    U(P('Hugh Clifford','Abhoro','','m'),[SP('Juliana','Ezerioha','','f')],[
-      U(P('Chinonye','','','u'),[],[],3),U(P('Uchenna','','','u'),[],[],3),
-      U(P('Chichi','','','u'),[],[],3),U(P('Ebere','','','u'),[],[],3),
-      U(P('Ada','','','u'),[],[],3),U(P('Symphorosa','','','u'),[],[],3),
-      U(P('Ifeanyichukwu','','','u'),[],[],3),
-    ],2),
-    U(P('Regina','Ike','Nwaotube','f'),[SP('Lawrence','Ike','','m')],[
-      U(P('Lauretta','','','f'),[],[],3),U(P('Edwin','','','m'),[],[],3),
-      U(P('Young','','','u'),[],[],3),U(P('Joseph','','','m'),[],[],3),
-      U(P('Anthonia','','','f'),[],[],3),U(P('Stella','','','f'),[],[],3),
-      U(P('Livina','','','f'),[],[],3),
-    ],2),
-    U(P('Dorathy','Onyeagwara','','f'),[SP('Gregory','Onyeagwara','','m')],[
-      U(P('Ngozi','Nwabundu','','f'),[],[],3),U(P('Desmond','','','m'),[],[],3),
-      U(P('Coleman','','','m'),[],[],3),U(P('Okezie','','','m'),[],[],3),
-      U(P('Ifeyinwa','','','f'),[],[],3),U(P('Chinenye','','','f'),[],[],3),
-      U({id:uid(),firstName:'Winfred',lastName:'',nickname:'',gender:'u',isLate:true,birthYear:'',deathYear:'',birthday:'',notes:''},[],[],3),
-    ],2),
-  ],1),
-
-  U(P('Marcus','Ezie','Anuebunwa','m',true),[SP('Ukwudie','Okoronkwo','','f')],
-  [
-    U(P('Benneth','Ezie','','m'),[SP('Evelyn','Iheanacho','','f')],[],2),
-    U(P('Cecelia','Ezie','Mgbe','f'),[SP('Felix','Ekeoche','','m')],[
-      U(P('Chiebo','','','u'),[],[],3),U(P('Ekwutos','','','u'),[],[],3),
-      U(P('Nkechi','','','f'),[],[],3),U(P('Gladys','','','f'),[],[],3),
-      U(P('Marcus','','','m'),[],[],3),U(P('Leticia','','','f'),[],[],3),
-    ],2),
-    U(P('Ephriam','Ezie','','m'),[SP('Rose','(surname unknown)','','f','','','','','Grandfather (maternal side): Ahaneku, from Orlu','')],[
-      U(P('Francis','','','m'),[],[],3),
-    ],2),
-  ],1),
-  ];
-}
-
-// ================================================================
-// TOAST
-// ================================================================
-let toastTimer;
-function toast(msg, type='ok'){
-  const el = document.getElementById('toast');
-  el.textContent = (type==='ok'?'> ': type==='warn'?'! ':' ✕ ') + msg;
-  el.className = 'toast show' + (type!=='ok'?' '+type:'');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ el.classList.remove('show'); }, 3200);
-}
+function setLastSync(){ const el=document.getElementById('syncTime'); if(el) el.textContent='Last sync '+new Date().toLocaleTimeString(); }
 
 // ================================================================
 // UTILS
 // ================================================================
-function dn(p){let n=(p.firstName||'').trim();const ln=(p.lastName||'').trim();if(ln)n+=' '+ln;return n||'(Unknown)';}
-function nick(p){return p.nickname?` "${p.nickname}"`:''}
-function dates(p){
-  if(p.birthYear&&p.isLate&&p.deathYear)return`(${p.birthYear}-${p.deathYear})`;
-  if(p.birthYear&&p.isLate)return`(${p.birthYear}-†)`;
-  if(p.birthYear)return`(b.${p.birthYear})`;
-  if(p.isLate&&p.deathYear)return`(†${p.deathYear})`;
-  if(p.isLate)return'(late)';return'';
+function spouseLabel(g){ return g==='m'?'Wife': g==='f'?'Husband':'Spouse'; }
+function spouseLabelTerminal(g){ return g==='m'?'and wife': g==='f'?'and husband':'and spouse'; }
+function P(fn,ln,nick,g,late,by,dy,bd,notes){
+  return{id:uid(),firstName:fn||'',lastName:ln||'',nickname:nick||'',gender:g||'u',isLate:!!late,birthYear:by||'',deathYear:dy||'',birthday:bd||'',notes:notes||''};
 }
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-function val(id){const e=document.getElementById(id);return e?e.value.trim():'';}
-function findU(id,arr){for(const u of arr){if(u.id===id)return u;if(u.children){const f=findU(id,u.children);if(f)return f;}}return null;}
-function findPA(id,arr){for(const u of arr){if(u.children){if(u.children.find(c=>c.id===id))return u.children;const f=findPA(id,u.children);if(f)return f;}}return null;}
+function SP(fn,ln,nick,g,late,by,dy,bd,notes,myr){
+  return{...P(fn,ln,nick,g,late,by,dy,bd,notes),marriageYear:myr||''};
+}
+function U(member,spouses,children,level){ return{id:uid(),member,spouses:spouses||[],children:children||[],level}; }
+function dn(p){ let n=(p.firstName||'').trim(); const ln=(p.lastName||'').trim(); if(ln)n+=' '+ln; return n||'(Unknown)'; }
+function initials(p){ const f=(p.firstName||'').trim(); const l=(p.lastName||'').trim(); return (f[0]||'')+(l[0]||'')||'?'; }
+function datesModern(p){
+  if(p.birthYear&&p.isLate&&p.deathYear) return p.birthYear+' – '+p.deathYear;
+  if(p.birthYear) return 'b. '+p.birthYear;
+  if(p.isLate&&p.deathYear) return '† '+p.deathYear;
+  if(p.isLate) return 'Deceased'; return '';
+}
+function datesTerminal(p){
+  if(p.birthYear&&p.isLate&&p.deathYear) return '('+p.birthYear+'-'+p.deathYear+')';
+  if(p.birthYear&&p.isLate) return '('+p.birthYear+'-†)';
+  if(p.birthYear) return '(b.'+p.birthYear+')';
+  if(p.isLate&&p.deathYear) return '(†'+p.deathYear+')';
+  if(p.isLate) return '(late)'; return '';
+}
+function esc(s){ return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function val(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
+function findU(id,arr){ for(const u of arr){ if(u.id===id)return u; if(u.children){const f=findU(id,u.children);if(f)return f;} } return null; }
+function findPA(id,arr){ for(const u of arr){ if(u.children){ if(u.children.find(c=>c.id===id))return u.children; const f=findPA(id,u.children);if(f)return f; } } return null; }
 
 // ================================================================
-// RENDER
+// RENDER — switches based on active theme
 // ================================================================
-function renderUnion(u, parentPipes, isLast){
-  const m=u.member;
-  const hasChildren=u.children&&u.children.length>0;
+function renderUnion(u, pipeStr, isLast){
+  const theme = getTheme();
+  return theme === 'terminal'
+    ? renderUnionTerminal(u, pipeStr, isLast)
+    : renderUnionModern(u, isLast);
+}
+
+/* ── MODERN render ── */
+function renderUnionModern(u, isLast){
+  const m=u.member, hasC=u.children&&u.children.length>0;
+  const dStr=datesModern(m);
+  const toggleId='ch-'+u.id;
+
+  const toggleBtn = hasC
+    ? `<button class="toggle-btn" id="tgl-${u.id}" onclick="toggle('${toggleId}','tgl-${u.id}')">−</button>`
+    : `<button class="toggle-btn leaf" disabled>·</button>`;
+
+  const avClass = (m.gender==='m'?'avatar-m':m.gender==='f'?'avatar-f':'avatar-u')+(m.isLate?' avatar-late':'');
+
+  let spHtml='';
+  if(u.spouses.length>0){
+    u.spouses.forEach(sp=>{
+      const lbl=spouseLabel(m.gender);
+      const myrStr=sp.marriageYear?' · '+sp.marriageYear:'';
+      spHtml+=`<div class="u-spouse-row">
+        <div class="spouse-connector"><div class="spouse-connector-inner"></div></div>
+        <div class="spouse-tag">
+          <div class="member-avatar ${(sp.gender==='m'?'avatar-m':sp.gender==='f'?'avatar-f':'avatar-u')}" style="width:22px;height:22px;font-size:11px">${esc(initials(sp))}</div>
+          <span class="spouse-label">${lbl}</span>
+          <span class="spouse-name">${esc(dn(sp))}${sp.nickname?` <em style="color:var(--border-hi);font-size:13px">"${esc(sp.nickname)}"</em>`:''}</span>
+          ${myrStr?`<span class="spouse-myr">${esc(myrStr)}</span>`:''}
+          <button class="act-btn" onclick="editSpouse(${u.id},${sp.id})">Edit</button>
+        </div>
+      </div>`;
+    });
+  } else {
+    spHtml=`<div class="u-spouse-row">
+      <div class="spouse-connector"><div class="spouse-connector-inner"></div></div>
+      <button class="act-btn" onclick="addSpouse(${u.id})">+ Add spouse</button>
+    </div>`;
+  }
+  const noteHtml=m.notes?`<div class="u-note">${esc(m.notes)}</div>`:'';
+
+  return `<div class="u-block" data-level="${u.level}" data-id="${u.id}">
+  <div class="u-row">
+    <div class="u-connector${isLast?' last':''}"></div>
+    <div class="u-body">
+      <div class="u-card">
+        ${toggleBtn}
+        <div class="member-avatar ${avClass}">${esc(initials(m))}</div>
+        <div class="member-info">
+          <div class="member-name${m.isLate?' late':''}">${esc(dn(m))}${m.nickname?`<span class="member-nick">"${esc(m.nickname)}"</span>`:''}${m.isLate?`<span class="dagger">†</span>`:''}</div>
+          ${dStr?`<div class="member-dates">${esc(dStr)}</div>`:''}
+        </div>
+        <div class="u-actions">
+          <button class="act-btn" onclick="editUnion(${u.id})">Edit</button>
+          <button class="act-btn" onclick="addChild(${u.id})">+ Child</button>
+          ${u.spouses.length?`<button class="act-btn" onclick="addSpouse(${u.id})">+ Spouse</button>`:''}
+          <button class="act-btn danger" onclick="deleteUnion(${u.id})">Remove</button>
+        </div>
+      </div>
+      ${spHtml}${noteHtml}
+    </div>
+  </div>
+  ${hasC?`<div class="u-children" id="ch-${u.id}">${u.children.map((c,i)=>renderUnionModern(c,i===u.children.length-1)).join('')}</div>`:''}
+</div>`;
+}
+
+/* ── TERMINAL render ── */
+function renderUnionTerminal(u, parentPipes, isLast){
+  const m=u.member, hasC=u.children&&u.children.length>0;
   const connector=isLast?'└── ':'├── ';
   const childPipes=parentPipes+(isLast?'    ':'│   ');
-  const lvlColor=['','#ffff00','#7cb98a','#6ba3c8','#c87ca0'][u.level]||'#c87ca0';
   const toggleId='ch-'+u.id;
-  let toggleBtn=hasChildren
-    ?`<button class="u-toggle" id="tgl-${u.id}" onclick="toggle('${toggleId}','tgl-${u.id}')">[-]</button>`
-    :`<button class="u-toggle leaf" disabled>[·]</button>`;
-  const dStr=dates(m);
+  const dStr=datesTerminal(m);
+  const lvlColor=['','#ffff00','#7cb98a','#6ba3c8','#c87ca0'][u.level]||'#c87ca0';
 
-  let spouseHtml='';
+  const toggleBtn=hasC
+    ?`<button class="toggle-btn" id="tgl-${u.id}" onclick="toggle('${toggleId}','tgl-${u.id}')">[-]</button>`
+    :`<button class="toggle-btn leaf" disabled>[·]</button>`;
+
+  let spHtml='';
   u.spouses.forEach(sp=>{
-    const label=spouseLabel(m.gender);
+    const lbl=spouseLabelTerminal(m.gender);
     const myrStr=sp.marriageYear?` (m.${sp.marriageYear})`:'';
-    spouseHtml+=`<div class="u-spouse-line">
-      <span style="color:var(--green-dk);user-select:none">${esc(childPipes)}    </span>
-      <span class="u-spouse-label">${label}${myrStr}</span>
-      <span class="u-spouse-name">&nbsp;${esc(dn(sp))}${esc(nick(sp))}</span>
-      <span class="act-btn" style="display:inline-block;cursor:pointer;font-size:clamp(8px,1.3vw,10px);border:1px solid var(--green-dk);color:var(--green-dim);padding:0 3px;margin-left:4px;" onclick="editSpouse(${u.id},${sp.id})">[edit]</span>
+    spHtml+=`<div class="u-spouse-row">
+      <span class="spouse-pipes">${esc(childPipes)}    </span>
+      <div class="spouse-tag">
+        <span class="spouse-label">${lbl}${myrStr}</span>
+        <span class="spouse-name">&nbsp;${esc(dn(sp))}${sp.nickname?` "${esc(sp.nickname)}"`:''}</span>
+        <button class="act-btn" onclick="editSpouse(${u.id},${sp.id})" style="margin-left:4px">[edit]</button>
+      </div>
     </div>`;
   });
   if(!u.spouses.length){
-    spouseHtml=`<div class="u-spouse-line">
-      <span style="color:var(--green-dk);user-select:none">${esc(childPipes)}    </span>
+    spHtml=`<div class="u-spouse-row">
+      <span class="spouse-pipes">${esc(childPipes)}    </span>
       <button class="act-btn" onclick="addSpouse(${u.id})">[+ add spouse]</button>
     </div>`;
   }
-  const noteStr=m.notes?`<div class="u-note"><span style="color:var(--green-dk);user-select:none">${esc(childPipes)}    </span>// ${esc(m.notes)}</div>`:'';
+  const noteHtml=m.notes?`<div class="u-note"><span class="note-pipes">${esc(childPipes)}    </span>// ${esc(m.notes)}</div>`:'';
 
-  return`<div class="u-block" data-level="${u.level}" data-id="${u.id}">
+  return `<div class="u-block" data-level="${u.level}" data-id="${u.id}">
   <div class="u-row">
-    <span class="u-pipes" style="color:var(--green-dk)">${esc(parentPipes)}${esc(connector)}</span>
-    <div class="u-content">
-      ${toggleBtn}<span class="u-member${m.isLate?' late':''}" style="color:${lvlColor}">${esc(dn(m))}${esc(nick(m))}</span>${dStr?`<span class="u-dates">${esc(dStr)}</span>`:''}
-      <span class="u-actions">
-        <button class="act-btn" onclick="editUnion(${u.id})">[edit]</button>
-        <button class="act-btn" onclick="addChild(${u.id})">[+child]</button>
-        ${u.spouses.length?`<button class="act-btn" onclick="addSpouse(${u.id})">[+spouse]</button>`:''}
-        <button class="act-btn danger" onclick="deleteUnion(${u.id})">[del]</button>
-      </span>
+    <div class="u-connector" style="color:var(--border)">${esc(parentPipes)}${esc(connector)}</div>
+    <div class="u-body">
+      <div class="u-card">
+        ${toggleBtn}<div class="member-name${m.isLate?' late':''}" style="color:${lvlColor}">${esc(dn(m))}${m.nickname?`<span class="member-nick"> "${esc(m.nickname)}"</span>`:''}</div>${dStr?`<span class="member-dates">${esc(dStr)}</span>`:''}
+        <div class="u-actions">
+          <button class="act-btn" onclick="editUnion(${u.id})">[edit]</button>
+          <button class="act-btn" onclick="addChild(${u.id})">[+child]</button>
+          ${u.spouses.length?`<button class="act-btn" onclick="addSpouse(${u.id})">[+spouse]</button>`:''}
+          <button class="act-btn danger" onclick="deleteUnion(${u.id})">[del]</button>
+        </div>
+      </div>
+      ${spHtml}${noteHtml}
     </div>
   </div>
-  ${spouseHtml}${noteStr}
-  ${hasChildren?`<div class="u-children" id="ch-${u.id}">${u.children.map((c,i)=>renderUnion(c,childPipes,i===u.children.length-1)).join('')}</div>`:''}
+  ${hasC?`<div class="u-children" id="ch-${u.id}">${u.children.map((c,i)=>renderUnionTerminal(c,childPipes,i===u.children.length-1)).join('')}</div>`:''}
 </div>`;
 }
 
 function renderTree(){
   const tree=document.getElementById('tree');
-  const sections=['UNION 1 — Marcus Anuebunwa Ezie & Christiania Mgbeojirikwe Nnaediekwe','UNION 2 — Marcus Anuebunwa Ezie & Ukwudie Okoronkwo'];
+  const theme=getTheme();
+  const sections=[
+    theme==='terminal'
+      ? 'UNION 1 — Marcus Anuebunwa Ezie & Christiania Mgbeojirikwe Nnaediekwe'
+      : 'Union I — Marcus Anuebunwa Ezie & Christiania Mgbeojirikwe Nnaediekwe',
+    theme==='terminal'
+      ? 'UNION 2 — Marcus Anuebunwa Ezie & Ukwudie Okoronkwo'
+      : 'Union II — Marcus Anuebunwa Ezie & Ukwudie Okoronkwo'
+  ];
   let html='';
   familyData.forEach((u,i)=>{
-    html+=`<div class="section-head">${sections[i]||'ADDITIONAL ROOT FAMILY'}</div>`;
-    html+=renderUnion(u,'',true);
+    html+=`<div class="section-banner"><div class="banner-line"></div><div class="banner-text">${sections[i]||'Additional Root Family'}</div><div class="banner-line"></div></div>`;
+    html += theme==='terminal' ? renderUnionTerminal(u,'',true) : renderUnionModern(u,true);
   });
   tree.innerHTML=html;
 }
@@ -663,43 +990,37 @@ function renderTree(){
 // COLLAPSE / EXPAND
 // ================================================================
 function toggle(childId,btnId){
-  const el=document.getElementById(childId);const btn=document.getElementById(btnId);
-  if(!el)return;const c=el.classList.toggle('collapsed');
-  if(btn)btn.textContent=c?'[+]':'[-]';
+  const el=document.getElementById(childId), btn=document.getElementById(btnId);
+  if(!el)return; const c=el.classList.toggle('collapsed');
+  if(btn) btn.textContent = getTheme()==='terminal' ? (c?'[+]':'[-]') : (c?'+':'−');
 }
 function collapseToLevel(maxLevel){
   document.querySelectorAll('.u-children').forEach(el=>el.classList.remove('collapsed'));
-  document.querySelectorAll('.u-toggle:not(.leaf)').forEach(b=>b.textContent='[-]');
+  document.querySelectorAll('.toggle-btn:not(.leaf)').forEach(b=>b.textContent=getTheme()==='terminal'?'[-]':'−');
   document.querySelectorAll('.u-block').forEach(block=>{
-    const lvl=parseInt(block.dataset.level);
-    if(lvl>=maxLevel){
+    if(parseInt(block.dataset.level)>=maxLevel){
       const cc=block.querySelector(':scope > .u-children');
-      if(cc){cc.classList.add('collapsed');const btn=document.getElementById('tgl-'+block.dataset.id);if(btn)btn.textContent='[+]';}
+      if(cc){ cc.classList.add('collapsed'); const btn=document.getElementById('tgl-'+block.dataset.id); if(btn) btn.textContent=getTheme()==='terminal'?'[+]':'+'; }
     }
   });
-  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.level-btn')[maxLevel-1]?.classList.add('active');
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tbtn')[maxLevel-1]?.classList.add('active');
 }
 function expandAll(){
   document.querySelectorAll('.u-children').forEach(el=>el.classList.remove('collapsed'));
-  document.querySelectorAll('.u-toggle:not(.leaf)').forEach(b=>b.textContent='[-]');
-  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.level-btn')[4]?.classList.add('active');
+  document.querySelectorAll('.toggle-btn:not(.leaf)').forEach(b=>b.textContent=getTheme()==='terminal'?'[-]':'−');
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-all')?.classList.add('active');
 }
 
 // ================================================================
 // MODAL
 // ================================================================
 let modalCb=null;
-function openModal(title,body,cb){
-  document.getElementById('modalTitle').textContent=title;
-  document.getElementById('modalBody').innerHTML=body;
-  modalCb=cb;
-  document.getElementById('modalOverlay').classList.add('active');
-}
-function closeModal(){document.getElementById('modalOverlay').classList.remove('active');modalCb=null;}
-function closeModalOnOverlay(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
-function saveModal(){if(modalCb)modalCb();}
+function openModal(title,body,cb){ document.getElementById('modalTitle').textContent=title; document.getElementById('modalBody').innerHTML=body; modalCb=cb; document.getElementById('modalOverlay').classList.add('active'); }
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('active'); modalCb=null; }
+function closeModalOnOverlay(e){ if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+function saveModal(){ if(modalCb) modalCb(); }
 
 // ================================================================
 // PERSON FORM
@@ -712,199 +1033,136 @@ function pForm(p,prefix){
   </div>
   <div class="fg"><label>Nickname / Middle Names</label><input id="${prefix}nick" value="${esc(p.nickname)}"></div>
   <div class="fg-row">
-    <div class="fg"><label>Gender</label><select id="${prefix}g">${go('m','Male')}${go('f','Female')}${go('u','Unknown')}</select><div class="fg-hint">// controls "and wife" / "and husband"</div></div>
-    <div class="fg"><label>Status</label><select id="${prefix}late"><option value="0" ${!p.isLate?'selected':''}>Living</option><option value="1" ${p.isLate?'selected':''}>Late</option></select></div>
+    <div class="fg"><label>Gender</label><select id="${prefix}g">${go('m','Male')}${go('f','Female')}${go('u','Unknown')}</select></div>
+    <div class="fg"><label>Status</label><select id="${prefix}late"><option value="0" ${!p.isLate?'selected':''}>Living</option><option value="1" ${p.isLate?'selected':''}>Deceased</option></select></div>
   </div>
   <div class="fg-row">
     <div class="fg"><label>Birth Year</label><input id="${prefix}by" value="${esc(p.birthYear)}" placeholder="e.g. 1950"></div>
-    <div class="fg"><label>Death Year</label><input id="${prefix}dy" value="${esc(p.deathYear)}" placeholder="if late"></div>
+    <div class="fg"><label>Death Year</label><input id="${prefix}dy" value="${esc(p.deathYear)}" placeholder="if deceased"></div>
   </div>
   <div class="fg"><label>Birthday (day + month)</label><input id="${prefix}bd" value="${esc(p.birthday)}" placeholder="e.g. 12 March"></div>
   <div class="fg"><label>Notes</label><textarea id="${prefix}notes">${esc(p.notes||'')}</textarea></div>`;
 }
 function readForm(p,prefix){
-  p.firstName=val(prefix+'fn');p.lastName=val(prefix+'ln');p.nickname=val(prefix+'nick');
-  p.gender=val(prefix+'g');p.isLate=document.getElementById(prefix+'late').value==='1';
-  p.birthYear=val(prefix+'by');p.deathYear=val(prefix+'dy');
-  p.birthday=val(prefix+'bd');p.notes=val(prefix+'notes');
+  p.firstName=val(prefix+'fn'); p.lastName=val(prefix+'ln'); p.nickname=val(prefix+'nick');
+  p.gender=val(prefix+'g'); p.isLate=document.getElementById(prefix+'late').value==='1';
+  p.birthYear=val(prefix+'by'); p.deathYear=val(prefix+'dy');
+  p.birthday=val(prefix+'bd'); p.notes=val(prefix+'notes');
 }
 
 // ================================================================
-// EDIT / DELETE MEMBER
+// EDIT / DELETE / SPOUSE / CHILD
 // ================================================================
 function editUnion(id){
-  const u=findU(id,familyData);if(!u)return;
-  openModal('EDIT: '+dn(u.member).toUpperCase(),
-    pForm(u.member,'em_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteUnion(${id})">[DEL]</button><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[SAVE]</button></div>`,
+  const u=findU(id,familyData); if(!u)return;
+  openModal('Edit: '+dn(u.member),
+    pForm(u.member,'em_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteUnion(${id})">Remove</button><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="saveModal()">Save</button></div>`,
     ()=>{ readForm(u.member,'em_'); closeModal(); toast('Saved'); afterEdit(); });
 }
 function deleteUnion(id){
-  if(!confirm('Delete this person and all their descendants?'))return;
+  if(!confirm('Remove this person and all their descendants?'))return;
   const pa=findPA(id,familyData);
   if(pa){const i=pa.findIndex(u=>u.id===id);if(i!==-1)pa.splice(i,1);}
   else{const i=familyData.findIndex(u=>u.id===id);if(i!==-1)familyData.splice(i,1);}
-  closeModal(); toast('Deleted'); afterEdit();
+  closeModal(); toast('Removed'); afterEdit();
 }
-
-// ================================================================
-// SPOUSE
-// ================================================================
 function spForm(sp,prefix){
-  return pForm(sp,prefix)+`
-  <div class="fg-row">
+  return pForm(sp,prefix)+`<div class="fg-row">
     <div class="fg"><label>Marriage Year</label><input id="${prefix}myr" value="${esc(sp.marriageYear||'')}" placeholder="e.g. 1982"></div>
-    <div class="fg"><label>Marriage Date <span style="color:var(--cyan)">(for anniversary alerts)</span></label><input id="${prefix}mdate" value="${esc(sp.marriageDate||'')}" placeholder="e.g. 14 February"></div>
+    <div class="fg"><label>Marriage Date (for alerts)</label><input id="${prefix}mdate" value="${esc(sp.marriageDate||'')}" placeholder="e.g. 14 February"></div>
   </div>`;
 }
-function readSpouseExtra(sp,prefix){
-  sp.marriageYear=val(prefix+'myr');
-  sp.marriageDate=val(prefix+'mdate');
-}
+function readSpouseExtra(sp,prefix){ sp.marriageYear=val(prefix+'myr'); sp.marriageDate=val(prefix+'mdate'); }
 function editSpouse(uid2,sid){
-  const u=findU(uid2,familyData);if(!u)return;
-  const sp=u.spouses.find(s=>s.id===sid);if(!sp)return;
-  openModal('EDIT SPOUSE: '+dn(sp).toUpperCase(),
-    spForm(sp,'sp_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteSpouse(${uid2},${sid})">[REMOVE]</button><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[SAVE]</button></div>`,
+  const u=findU(uid2,familyData); if(!u)return;
+  const sp=u.spouses.find(s=>s.id===sid); if(!sp)return;
+  openModal('Edit Spouse: '+dn(sp),
+    spForm(sp,'sp_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteSpouse(${uid2},${sid})">Remove</button><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="saveModal()">Save</button></div>`,
     ()=>{ readForm(sp,'sp_'); readSpouseExtra(sp,'sp_'); closeModal(); toast('Spouse saved'); afterEdit(); });
 }
 function deleteSpouse(uid2,sid){
-  if(!confirm('Remove spouse?'))return;
-  const u=findU(uid2,familyData);if(u)u.spouses=u.spouses.filter(s=>s.id!==sid);
+  if(!confirm('Remove this spouse?'))return;
+  const u=findU(uid2,familyData); if(u) u.spouses=u.spouses.filter(s=>s.id!==sid);
   closeModal(); toast('Spouse removed'); afterEdit();
 }
 function addSpouse(uid2){
-  const u=findU(uid2,familyData);if(!u)return;
+  const u=findU(uid2,familyData); if(!u)return;
   const sp={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:'',marriageYear:'',marriageDate:''};
-  openModal('ADD SPOUSE TO: '+dn(u.member).toUpperCase(),
-    spForm(sp,'ns_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
-    ()=>{ readForm(sp,'ns_'); readSpouseExtra(sp,'ns_'); if(!sp.firstName&&!sp.lastName){alert('Enter a name.');return;} u.spouses.push(sp); closeModal(); toast('Spouse added'); afterEdit(); });
+  openModal('Add Spouse to '+dn(u.member),
+    spForm(sp,'ns_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="saveModal()">Add</button></div>`,
+    ()=>{ readForm(sp,'ns_'); readSpouseExtra(sp,'ns_'); if(!sp.firstName&&!sp.lastName){alert('Please enter a name.');return;} u.spouses.push(sp); closeModal(); toast('Spouse added'); afterEdit(); });
 }
-
-// ================================================================
-// ADD CHILD
-// ================================================================
 function addChild(pid){
-  const parent=findU(pid,familyData);if(!parent)return;
+  const parent=findU(pid,familyData); if(!parent)return;
   const lvl=Math.min((parent.level||1)+1,5);
   const m={id:uid(),firstName:'',lastName:'',nickname:'',gender:'u',isLate:false,birthYear:'',deathYear:'',birthday:'',notes:''};
-  openModal('ADD CHILD UNDER: '+dn(parent.member).toUpperCase(),
-    pForm(m,'nc_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">[CANCEL]</button><button class="mbtn primary" onclick="saveModal()">[ADD]</button></div>`,
-    ()=>{ readForm(m,'nc_'); if(!m.firstName){alert('Enter a first name.');return;} parent.children.push({id:uid(),member:m,spouses:[],children:[],level:lvl}); closeModal(); toast('Child added'); afterEdit(); });
+  openModal('Add Child under '+dn(parent.member),
+    pForm(m,'nc_')+`<div class="modal-actions"><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="saveModal()">Add</button></div>`,
+    ()=>{ readForm(m,'nc_'); if(!m.firstName){alert('Please enter a first name.');return;} parent.children.push({id:uid(),member:m,spouses:[],children:[],level:lvl}); closeModal(); toast('Child added'); afterEdit(); });
 }
 
 // ================================================================
-// INIT — Sheets is the ONLY source of truth.
-// On load: show cached tree instantly if available (so page isn't blank),
-// then immediately fetch from Sheets and overwrite with the real data.
-// The seed() function exists only for the Apps Script to reference if
-// needed — it is NEVER called here.
+// TOAST
 // ================================================================
-(async function init(){
-  // Step 1: if we have a warm cache, render it immediately so the page
-  // isn't blank while the fetch is in-flight. This is purely cosmetic.
-  if(cacheRead() && familyData.length > 0){
-    renderTree();
-    setSyncStatus('saving','refreshing from database...');
-  } else {
-    setSyncStatus('saving','loading from database...');
-  }
-
-  // Step 2: ALWAYS fetch the real data from Sheets.
-  // This overwrites anything rendered from cache.
-  await loadFromSheets(true);
-})();
+let toastTimer;
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type!=='ok'?' '+type:'');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),3200);
+}
 
 // ================================================================
 // SUBSCRIBE MODAL
 // ================================================================
 function openSubscribeModal(){
-  document.getElementById('subModal').classList.add('active');
-  switchSubTab('sub');
-  // Reset fields
-  ['subName','subEmail','unsubEmail'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
-  });
+  document.getElementById('subModal').classList.add('active'); switchSubTab('sub');
+  ['subName','subEmail','unsubEmail'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
-function closeSubModal(){
-  document.getElementById('subModal').classList.remove('active');
-}
-function closeSubModalOnOverlay(e){
-  if(e.target===document.getElementById('subModal'))closeSubModal();
-}
+function closeSubModal(){ document.getElementById('subModal').classList.remove('active'); }
+function closeSubModalOnOverlay(e){ if(e.target===document.getElementById('subModal')) closeSubModal(); }
 function switchSubTab(tab){
-  document.getElementById('subPanel').style.display   = tab==='sub'  ?'block':'none';
+  document.getElementById('subPanel').style.display   = tab==='sub'?'block':'none';
   document.getElementById('unsubPanel').style.display = tab==='unsub'?'block':'none';
-  document.getElementById('tab-sub').classList.toggle('active', tab==='sub');
-  document.getElementById('tab-unsub').classList.toggle('active', tab==='unsub');
+  document.getElementById('tab-sub').classList.toggle('active',tab==='sub');
+  document.getElementById('tab-unsub').classList.toggle('active',tab==='unsub');
 }
-
-// ── SUBSCRIBE ──
 async function submitSubscribe(){
-  const email = (document.getElementById('subEmail').value||'').trim();
-  const name  = (document.getElementById('subName').value||'').trim();
-  if(!email||!email.includes('@')){ toast('Please enter a valid email address','error'); return; }
-
-  const btn = document.querySelector('#subPanel .mbtn.primary');
-  if(btn){ btn.textContent='[SENDING...]'; btn.disabled=true; }
-
+  const email=(document.getElementById('subEmail').value||'').trim();
+  const name=(document.getElementById('subName').value||'').trim();
+  if(!email||!email.includes('@')){toast('Please enter a valid email address','error');return;}
+  const btn=document.querySelector('#subPanel .mbtn.primary');
+  if(btn){btn.textContent='Sending…';btn.disabled=true;}
   try{
-    const res  = await fetch(SCRIPT_URL_LIVE,{
-      method:'POST',
-      body: JSON.stringify({action:'subscribe', email, name}),
-      headers:{'Content-Type':'text/plain'}
-    });
-    const json = await res.json();
-
-    if(json.status==='ok'){
-      if(json.message==='already_subscribed'){
-        toast('That email is already subscribed!','warn');
-      } else {
-        toast('✓ Subscribed! Check your inbox for a confirmation email.');
-        closeSubModal();
-      }
-    } else {
-      toast('Error: '+(json.message||'unknown'),'error');
-    }
-  }catch(e){
-    toast('Could not reach server. Try again.','error');
-  } finally {
-    if(btn){ btn.textContent='[SUBSCRIBE]'; btn.disabled=false; }
-  }
+    const res=await fetch(SCRIPT_URL_LIVE,{method:'POST',body:JSON.stringify({action:'subscribe',email,name}),headers:{'Content-Type':'text/plain'}});
+    const json=await res.json();
+    if(json.status==='ok'){ if(json.message==='already_subscribed') toast('That email is already subscribed!','warn'); else { toast('Subscribed! Check your inbox.'); closeSubModal(); } }
+    else toast('Error: '+(json.message||'unknown'),'error');
+  }catch(e){toast('Could not reach server. Try again.','error');}
+  finally{if(btn){btn.textContent='Subscribe';btn.disabled=false;}}
 }
-
-// ── UNSUBSCRIBE ──
 async function submitUnsubscribe(){
-  const email = (document.getElementById('unsubEmail').value||'').trim();
-  if(!email||!email.includes('@')){ toast('Please enter a valid email address','error'); return; }
-  if(!confirm('Unsubscribe '+email+' from all Ezie Family Tree alerts?')) return;
-
-  const btn = document.querySelector('#unsubPanel .mbtn.danger');
-  if(btn){ btn.textContent='[REMOVING...]'; btn.disabled=true; }
-
+  const email=(document.getElementById('unsubEmail').value||'').trim();
+  if(!email||!email.includes('@')){toast('Please enter a valid email address','error');return;}
+  if(!confirm('Unsubscribe '+email+' from all alerts?'))return;
+  const btn=document.querySelector('#unsubPanel .mbtn.danger');
+  if(btn){btn.textContent='Removing…';btn.disabled=true;}
   try{
-    const res  = await fetch(SCRIPT_URL_LIVE,{
-      method:'POST',
-      body: JSON.stringify({action:'unsubscribe', email}),
-      headers:{'Content-Type':'text/plain'}
-    });
-    const json = await res.json();
-
-    if(json.status==='ok'){
-      if(json.message==='not_found'){
-        toast('That email was not found in our subscriber list.','warn');
-      } else {
-        toast('✓ Unsubscribed successfully.');
-        closeSubModal();
-      }
-    } else {
-      toast('Error: '+(json.message||'unknown'),'error');
-    }
-  }catch(e){
-    toast('Could not reach server. Try again.','error');
-  } finally {
-    if(btn){ btn.textContent='[UNSUBSCRIBE]'; btn.disabled=false; }
-  }
+    const res=await fetch(SCRIPT_URL_LIVE,{method:'POST',body:JSON.stringify({action:'unsubscribe',email}),headers:{'Content-Type':'text/plain'}});
+    const json=await res.json();
+    if(json.status==='ok'){ if(json.message==='not_found') toast('That email was not found.','warn'); else { toast('Unsubscribed successfully.'); closeSubModal(); } }
+    else toast('Error: '+(json.message||'unknown'),'error');
+  }catch(e){toast('Could not reach server. Try again.','error');}
+  finally{if(btn){btn.textContent='Unsubscribe';btn.disabled=false;}}
 }
+
+// ================================================================
+// INIT
+// ================================================================
+(async function init(){
+  if(cacheRead()&&familyData.length>0){ renderTree(); setSyncStatus('saving','Refreshing…'); }
+  else { setSyncStatus('saving','Loading…'); }
+  await loadFromSheets(true);
+})();
 </script>
 </body>
 </html>
