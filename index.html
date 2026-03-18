@@ -184,6 +184,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 [data-theme="terminal"] .sub-tab:hover{color:var(--accent3)}
 footer{border-top:1px solid var(--border);padding:10px;margin-top:16px;color:var(--text-dim);font-size:10px;text-align:center}
 [data-theme="terminal"] footer::before{content:'C:\\> ';color:var(--border)}
+/* ── PHOTO FEATURE ── */
+.photo-section{margin-bottom:9px}
+.photo-preview-wrap{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.photo-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border-hi);flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;color:var(--text-dim);overflow:hidden}
+.photo-preview img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.photo-actions{display:flex;flex-direction:column;gap:5px}
+.photo-file-label{display:inline-block;cursor:pointer;font-family:var(--font);font-size:11px;padding:4px 10px;border-radius:var(--radius);transition:all .15s;white-space:nowrap}
+[data-theme="modern"] .photo-file-label{background:var(--bg3);border:1px solid var(--border);color:var(--text-hi)}
+[data-theme="modern"] .photo-file-label:hover{background:var(--border);border-color:var(--border-hi)}
+[data-theme="terminal"] .photo-file-label{background:var(--bg3);border:1px solid var(--border-hi);color:var(--accent1)}
+[data-theme="terminal"] .photo-file-label:hover{color:var(--accent3);border-color:var(--accent3);background:var(--border)}
+[data-theme="terminal"] .photo-file-label::before{content:'['}
+[data-theme="terminal"] .photo-file-label::after{content:']'}
+.photo-del-btn{font-family:var(--font);font-size:11px;padding:4px 10px;cursor:pointer;transition:all .15s;border-radius:var(--radius);white-space:nowrap;background:none}
+[data-theme="modern"] .photo-del-btn{border:1px solid rgba(160,48,32,.35);color:var(--danger)}
+[data-theme="modern"] .photo-del-btn:hover{background:rgba(160,48,32,.1)}
+[data-theme="terminal"] .photo-del-btn{border:1px solid var(--danger);color:var(--danger)}
+[data-theme="terminal"] .photo-del-btn:hover{background:rgba(255,68,68,.12)}
+.photo-status{font-size:10px;color:var(--text-dim);margin-top:3px}
+/* modern avatar with photo */
+[data-theme="modern"] .member-avatar.has-photo{padding:0;overflow:hidden}
+[data-theme="modern"] .member-avatar.has-photo img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 </style>
 </head>
 <body>
@@ -292,13 +314,14 @@ function findPA(id,arr){for(const u of arr){if(u.children){if(u.children.find(c=
 function renderUnion(u,pipeStr,isLast){return getTheme()==='terminal'?renderT(u,pipeStr,isLast):renderM(u,isLast);}
 function renderM(u,isLast){
   const m=u.member,hasC=u.children&&u.children.length>0,dStr=dM(m),tid='ch-'+u.id;
-  const avCls=(m.gender==='m'?'avatar-m':m.gender==='f'?'avatar-f':'avatar-u')+(m.isLate?' avatar-late':'');
+  const avCls=(m.gender==='m'?'avatar-m':m.gender==='f'?'avatar-f':'avatar-u')+(m.isLate?' avatar-late':'')+(m.photoUrl?' has-photo':'');
+  const avInner=m.photoUrl?`<img src="${esc(m.photoUrl)}" alt="${esc(initials(m))}">`:`${esc(initials(m))}`;
   const tBtn=hasC?`<button class="toggle-btn" id="tgl-${u.id}" onclick="toggle('${tid}','tgl-${u.id}')">\u2212</button>`:`<button class="toggle-btn leaf" disabled>\u00b7</button>`;
   let spHtml='';
   u.spouses.forEach(sp=>{const myrStr=sp.marriageYear?' \u00b7 '+sp.marriageYear:'';spHtml+=`<div class="u-spouse-row"><div class="spouse-indent"></div><div class="spouse-tag"><span class="spouse-label">${spouseLabel(m.gender)}</span><span class="spouse-name">${esc(dn(sp))}${sp.nickname?` <em style="font-size:11px;color:var(--accent1)">"${esc(sp.nickname)}"</em>`:''}</span>${myrStr?`<span class="spouse-myr">${esc(myrStr)}</span>`:''}<button class="act-btn" onclick="editSpouse(${u.id},${sp.id})">edit</button></div></div>`;});
   if(!u.spouses.length)spHtml=`<div class="u-spouse-row"><div class="spouse-indent"></div><button class="act-btn" onclick="addSpouse(${u.id})">+ spouse</button></div>`;
   const noteHtml=m.notes?`<div class="u-note">${esc(m.notes)}</div>`:'';
-  return`<div class="u-block" data-level="${u.level}" data-id="${u.id}"><div class="u-row"><div class="u-connector${isLast?' last':''}"></div><div class="u-body"><div class="u-card">${tBtn}<div class="member-avatar ${avCls}">${esc(initials(m))}</div><div style="flex:1;min-width:0"><div class="member-name${m.isLate?' late':''}">${esc(dn(m))}${m.nickname?`<span class="member-nick">"${esc(m.nickname)}"</span>`:''}${m.isLate?`<span class="dagger">\u2020</span>`:''}</div>${dStr?`<div class="member-dates">${esc(dStr)}</div>`:''}</div><div class="u-actions"><button class="act-btn" onclick="editUnion(${u.id})">edit</button><button class="act-btn" onclick="addChild(${u.id})">+child</button>${u.spouses.length?`<button class="act-btn" onclick="addSpouse(${u.id})">+spouse</button>`:''}<button class="act-btn del" onclick="deleteUnion(${u.id})">del</button></div></div>${spHtml}${noteHtml}</div></div>${hasC?`<div class="u-children" id="${tid}">${u.children.map((c,i)=>renderM(c,i===u.children.length-1)).join('')}</div>`:''}</div>`;
+  return`<div class="u-block" data-level="${u.level}" data-id="${u.id}"><div class="u-row"><div class="u-connector${isLast?' last':''}"></div><div class="u-body"><div class="u-card">${tBtn}<div class="member-avatar ${avCls}">${avInner}</div><div style="flex:1;min-width:0"><div class="member-name${m.isLate?' late':''}">${esc(dn(m))}${m.nickname?`<span class="member-nick">"${esc(m.nickname)}"</span>`:''}${m.isLate?`<span class="dagger">\u2020</span>`:''}</div>${dStr?`<div class="member-dates">${esc(dStr)}</div>`:''}</div><div class="u-actions"><button class="act-btn" onclick="editUnion(${u.id})">edit</button><button class="act-btn" onclick="addChild(${u.id})">+child</button>${u.spouses.length?`<button class="act-btn" onclick="addSpouse(${u.id})">+spouse</button>`:''}<button class="act-btn del" onclick="deleteUnion(${u.id})">del</button></div></div>${spHtml}${noteHtml}</div></div>${hasC?`<div class="u-children" id="${tid}">${u.children.map((c,i)=>renderM(c,i===u.children.length-1)).join('')}</div>`:''}</div>`;
 }
 function renderT(u,parentPipes,isLast){
   const m=u.member,hasC=u.children&&u.children.length>0,connector=isLast?'\u2514\u2500\u2500 ':'\u251c\u2500\u2500 ',childPipes=parentPipes+(isLast?'    ':'\u2502   '),tid='ch-'+u.id,dStr=dT(m);
@@ -332,9 +355,15 @@ function openModal(title,body,cb){document.getElementById('modalTitle').textCont
 function closeModal(){document.getElementById('modalOverlay').classList.remove('active');modalCb=null;}
 function closeModalOnOverlay(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
 function saveModal(){if(modalCb)modalCb();}
-function pForm(p,pfx){const go=(v,l)=>`<option value="${v}" ${p.gender===v?'selected':''}>${l}</option>`;return`<div class="fg-row"><div class="fg"><label>First Name</label><input id="${pfx}fn" value="${esc(p.firstName)}"></div><div class="fg"><label>Last Name</label><input id="${pfx}ln" value="${esc(p.lastName)}"></div></div><div class="fg"><label>Nickname / Middle Names</label><input id="${pfx}nick" value="${esc(p.nickname)}"></div><div class="fg-row"><div class="fg"><label>Gender</label><select id="${pfx}g">${go('m','Male')}${go('f','Female')}${go('u','Unknown')}</select></div><div class="fg"><label>Status</label><select id="${pfx}late"><option value="0" ${!p.isLate?'selected':''}>Living</option><option value="1" ${p.isLate?'selected':''}>Deceased</option></select></div></div><div class="fg-row"><div class="fg"><label>Birth Year</label><input id="${pfx}by" value="${esc(p.birthYear)}" placeholder="e.g. 1950"></div><div class="fg"><label>Death Year</label><input id="${pfx}dy" value="${esc(p.deathYear)}" placeholder="if deceased"></div></div><div class="fg"><label>Birthday (day + month)</label><input id="${pfx}bd" value="${esc(p.birthday)}" placeholder="e.g. 12 March"></div><div class="fg"><label>Notes</label><textarea id="${pfx}notes">${esc(p.notes||'')}</textarea></div>`;}
+function pForm(p,pfx){
+  const go=(v,l)=>`<option value="${v}" ${p.gender===v?'selected':''}>${l}</option>`;
+  const hasPhoto=!!(p.photoUrl);
+  const previewInner=hasPhoto?`<img src="${esc(p.photoUrl)}" alt="photo">`:`<span>${esc(initials(p)||'?')}</span>`;
+  const photoSection=`<div class="photo-section"><div class="fg-row" style="align-items:center"><div style="display:flex;flex-direction:column;gap:3px"><label style="display:block;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;color:var(--accent1)"># Profile Photo</label><div class="photo-preview-wrap"><div class="photo-preview" id="${pfx}photoPreview">${previewInner}</div><div class="photo-actions"><label class="photo-file-label" for="${pfx}photoFile">Upload photo</label><input type="file" id="${pfx}photoFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handlePhotoSelect('${pfx}',${JSON.stringify(p.id)})"><button type="button" class="photo-del-btn" id="${pfx}photoDelBtn" onclick="handlePhotoDelete('${pfx}',${JSON.stringify(p.id)})" style="${hasPhoto?'':'display:none'}">Remove photo</button></div></div><div class="photo-status" id="${pfx}photoStatus">${hasPhoto?'Photo saved':'No photo uploaded'}</div></div></div></div>`;
+  return photoSection+`<div class="fg-row"><div class="fg"><label>First Name</label><input id="${pfx}fn" value="${esc(p.firstName)}"></div><div class="fg"><label>Last Name</label><input id="${pfx}ln" value="${esc(p.lastName)}"></div></div><div class="fg"><label>Nickname / Middle Names</label><input id="${pfx}nick" value="${esc(p.nickname)}"></div><div class="fg-row"><div class="fg"><label>Gender</label><select id="${pfx}g">${go('m','Male')}${go('f','Female')}${go('u','Unknown')}</select></div><div class="fg"><label>Status</label><select id="${pfx}late"><option value="0" ${!p.isLate?'selected':''}>Living</option><option value="1" ${p.isLate?'selected':''}>Deceased</option></select></div></div><div class="fg-row"><div class="fg"><label>Birth Year</label><input id="${pfx}by" value="${esc(p.birthYear)}" placeholder="e.g. 1950"></div><div class="fg"><label>Death Year</label><input id="${pfx}dy" value="${esc(p.deathYear)}" placeholder="if deceased"></div></div><div class="fg"><label>Birthday (day + month)</label><input id="${pfx}bd" value="${esc(p.birthday)}" placeholder="e.g. 12 March"></div><div class="fg"><label>Notes</label><textarea id="${pfx}notes">${esc(p.notes||'')}</textarea></div>`;
+}
 function readForm(p,pfx){p.firstName=val(pfx+'fn');p.lastName=val(pfx+'ln');p.nickname=val(pfx+'nick');p.gender=val(pfx+'g');p.isLate=document.getElementById(pfx+'late').value==='1';p.birthYear=val(pfx+'by');p.deathYear=val(pfx+'dy');p.birthday=val(pfx+'bd');p.notes=val(pfx+'notes');}
-function editUnion(id){const u=findU(id,familyData);if(!u)return;openModal('Edit: '+dn(u.member),pForm(u.member,'em_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteUnion(${id})">Remove</button><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="saveModal()">Save</button></div>`,()=>{readForm(u.member,'em_');closeModal();toast('Saved');afterEdit();});}
+
 function deleteUnion(id){if(!confirm('Remove this person and all descendants?'))return;const pa=findPA(id,familyData);if(pa){const i=pa.findIndex(u=>u.id===id);if(i!==-1)pa.splice(i,1);}else{const i=familyData.findIndex(u=>u.id===id);if(i!==-1)familyData.splice(i,1);}closeModal();toast('Removed');afterEdit();}
 function spForm(sp,pfx){return pForm(sp,pfx)+`<div class="fg-row"><div class="fg"><label>Marriage Year</label><input id="${pfx}myr" value="${esc(sp.marriageYear||'')}" placeholder="e.g. 1982"></div><div class="fg"><label>Marriage Date (alerts)</label><input id="${pfx}mdate" value="${esc(sp.marriageDate||'')}" placeholder="e.g. 14 Feb"></div></div>`;}
 function readSpouseExtra(sp,pfx){sp.marriageYear=val(pfx+'myr');sp.marriageDate=val(pfx+'mdate');}
@@ -350,6 +379,118 @@ function closeSubModalOnOverlay(e){if(e.target===document.getElementById('subMod
 function switchSubTab(tab){document.getElementById('subPanel').style.display=tab==='sub'?'block':'none';document.getElementById('unsubPanel').style.display=tab==='unsub'?'block':'none';document.getElementById('tab-sub').classList.toggle('active',tab==='sub');document.getElementById('tab-unsub').classList.toggle('active',tab==='unsub');}
 async function submitSubscribe(){const email=(document.getElementById('subEmail').value||'').trim(),name=(document.getElementById('subName').value||'').trim();if(!email||!email.includes('@')){toast('Enter a valid email','error');return;}const btn=document.querySelector('#subPanel .mbtn.primary');if(btn){btn.textContent='Sending\u2026';btn.disabled=true;}try{const res=await fetch(SCRIPT_URL_LIVE,{method:'POST',body:JSON.stringify({action:'subscribe',email,name}),headers:{'Content-Type':'text/plain'}});const json=await res.json();if(json.status==='ok'){if(json.message==='already_subscribed')toast('Already subscribed!','warn');else{toast('Subscribed! Check your inbox.');closeSubModal();}}else toast('Error: '+(json.message||'?'),'error');}catch(e){toast('Cannot reach server','error');}finally{if(btn){btn.textContent='Subscribe';btn.disabled=false;}}}
 async function submitUnsubscribe(){const email=(document.getElementById('unsubEmail').value||'').trim();if(!email||!email.includes('@')){toast('Enter a valid email','error');return;}if(!confirm('Unsubscribe '+email+' from all alerts?'))return;const btn=document.querySelector('#unsubPanel .mbtn.danger');if(btn){btn.textContent='Removing\u2026';btn.disabled=true;}try{const res=await fetch(SCRIPT_URL_LIVE,{method:'POST',body:JSON.stringify({action:'unsubscribe',email}),headers:{'Content-Type':'text/plain'}});const json=await res.json();if(json.status==='ok'){if(json.message==='not_found')toast('Email not found','warn');else{toast('Unsubscribed.');closeSubModal();}}else toast('Error: '+(json.message||'?'),'error');}catch(e){toast('Cannot reach server','error');}finally{if(btn){btn.textContent='Unsubscribe';btn.disabled=false;}}}
+// ── PHOTO FUNCTIONS ──
+// Holds pending base64 data per prefix until modal Save is clicked
+const _pendingPhotos={};
+
+function handlePhotoSelect(pfx, personId){
+  const input=document.getElementById(pfx+'photoFile');
+  const file=input?input.files[0]:null;
+  if(!file)return;
+  if(file.size>5*1024*1024){toast('Image must be under 5MB','error');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const dataUrl=e.target.result;
+    const base64=dataUrl.split(',')[1];
+    const mimeType=file.type||'image/jpeg';
+    // Store pending upload
+    _pendingPhotos[pfx]={base64,mimeType,fileName:file.name,personId};
+    // Update preview immediately
+    const preview=document.getElementById(pfx+'photoPreview');
+    if(preview)preview.innerHTML=`<img src="${dataUrl}" alt="preview">`;
+    const delBtn=document.getElementById(pfx+'photoDelBtn');
+    if(delBtn)delBtn.style.display='';
+    const status=document.getElementById(pfx+'photoStatus');
+    if(status)status.textContent='Ready to upload — click Save to confirm';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function handlePhotoDelete(pfx, personId){
+  if(!confirm('Remove this profile photo?'))return;
+  const delBtn=document.getElementById(pfx+'photoDelBtn');
+  const status=document.getElementById(pfx+'photoStatus');
+  // If there's only a pending (not-yet-saved) photo, just clear locally
+  if(_pendingPhotos[pfx]){
+    delete _pendingPhotos[pfx];
+    const preview=document.getElementById(pfx+'photoPreview');
+    if(preview)preview.innerHTML=`<span>?</span>`;
+    if(delBtn)delBtn.style.display='none';
+    if(status)status.textContent='No photo uploaded';
+    return;
+  }
+  // Otherwise delete from server
+  if(delBtn){delBtn.textContent='Removing…';delBtn.disabled=true;}
+  if(status)status.textContent='Deleting…';
+  try{
+    const res=await fetch(SCRIPT_URL_LIVE,{method:'POST',body:JSON.stringify({action:'deletePhoto',personId:String(personId)}),headers:{'Content-Type':'text/plain'}});
+    const json=await res.json();
+    if(json.status==='ok'){
+      // Clear photoUrl in local familyData
+      const u=findUByMemberId(personId,familyData);
+      if(u)u.member.photoUrl='';
+      const preview=document.getElementById(pfx+'photoPreview');
+      if(preview)preview.innerHTML=`<span>?</span>`;
+      if(delBtn)delBtn.style.display='none';
+      if(status)status.textContent='Photo removed';
+      cacheWrite();renderTree();
+      toast('Photo removed');
+    } else {
+      if(status)status.textContent='Delete failed';
+      toast('Delete failed: '+(json.message||'?'),'error');
+    }
+  }catch(e){
+    if(status)status.textContent='Delete failed';
+    toast('Cannot reach server','error');
+  } finally {
+    if(delBtn){delBtn.textContent='Remove photo';delBtn.disabled=false;}
+  }
+}
+
+async function flushPendingPhoto(pfx){
+  const pending=_pendingPhotos[pfx];
+  if(!pending)return;
+  const status=document.getElementById(pfx+'photoStatus');
+  if(status)status.textContent='Uploading…';
+  try{
+    const res=await fetch(SCRIPT_URL_LIVE,{method:'POST',body:JSON.stringify({action:'uploadPhoto',personId:String(pending.personId),fileName:pending.fileName,mimeType:pending.mimeType,base64Data:pending.base64}),headers:{'Content-Type':'text/plain'}});
+    const json=await res.json();
+    if(json.status==='ok'){
+      // Patch photoUrl into local familyData
+      const u=findUByMemberId(pending.personId,familyData);
+      if(u)u.member.photoUrl=json.photoUrl;
+      delete _pendingPhotos[pfx];
+      cacheWrite();renderTree();
+      toast('Photo saved');
+    } else {
+      toast('Photo upload failed: '+(json.message||'?'),'error');
+    }
+  }catch(e){
+    toast('Photo upload failed','error');
+  }
+}
+
+function findUByMemberId(memberId,arr){
+  for(const u of arr){
+    if(String(u.member.id)===String(memberId))return u;
+    if(u.children){const f=findUByMemberId(memberId,u.children);if(f)return f;}
+  }
+  return null;
+}
+
+// ── editUnion: includes photo flush on save ──
+function editUnion(id){
+  const u=findU(id,familyData);
+  if(!u)return;
+  openModal('Edit: '+dn(u.member),pForm(u.member,'em_')+`<div class="modal-actions"><button class="mbtn danger" onclick="deleteUnion(${id})">Remove</button><button class="mbtn cancel" onclick="closeModal()">Cancel</button><button class="mbtn primary" onclick="saveModal()">Save</button></div>`,async()=>{
+    readForm(u.member,'em_');
+    closeModal();
+    await flushPendingPhoto('em_');
+    toast('Saved');
+    afterEdit();
+  });
+}
+
 (async function init(){if(cacheRead()&&familyData.length){renderTree();setSyncStatus('saving','Refreshing\u2026');}else setSyncStatus('saving','Loading\u2026');await loadFromSheets(true);})();
 </script>
 </body>
