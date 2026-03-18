@@ -206,6 +206,24 @@ footer{border-top:1px solid var(--border);padding:10px;margin-top:16px;color:var
 /* modern avatar with photo */
 [data-theme="modern"] .member-avatar.has-photo{padding:0;overflow:hidden}
 [data-theme="modern"] .member-avatar.has-photo img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+/* ── PHOTO CAROUSEL ── */
+.carousel-wrap{overflow:hidden;border-bottom:1px solid var(--border);padding:7px 0;background:var(--bg2);position:relative}
+[data-theme="terminal"] .carousel-wrap{background:var(--bg2);border-bottom:1px solid var(--border)}
+.carousel-wrap:empty{display:none}
+.carousel-track{display:flex;gap:8px;width:max-content;animation:carousel-slide linear infinite}
+@keyframes carousel-slide{0%{transform:translateX(0)}100%{transform:translateX(var(--carousel-shift))}}
+.carousel-wrap:hover .carousel-track{animation-play-state:paused}
+.carousel-avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid var(--border);transition:border-color .2s,transform .2s;cursor:default}
+.carousel-avatar:hover{border-color:var(--border-hi);transform:scale(1.13);z-index:2}
+.carousel-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+[data-theme="terminal"] .carousel-avatar{border-radius:0;border-color:var(--border-hi)}
+[data-theme="terminal"] .carousel-avatar:hover{border-color:var(--accent1);box-shadow:0 0 8px rgba(51,255,51,.35)}
+.carousel-avatar[title]{position:relative}
+/* fade edges */
+.carousel-wrap::before,.carousel-wrap::after{content:'';position:absolute;top:0;bottom:0;width:32px;z-index:1;pointer-events:none}
+.carousel-wrap::before{left:0;background:linear-gradient(to right,var(--bg2),transparent)}
+.carousel-wrap::after{right:0;background:linear-gradient(to left,var(--bg2),transparent)}
+@media(max-width:480px){.carousel-avatar{width:36px;height:36px}}
 </style>
 </head>
 <body>
@@ -240,6 +258,7 @@ footer{border-top:1px solid var(--border);padding:10px;margin-top:16px;color:var
   <div class="leg"><div class="leg-dot" style="background:var(--accent1)"></div>Spouse</div>
   <div class="leg"><div class="leg-dot" style="background:var(--text-dim)"></div>Deceased</div>
 </div>
+<div class="carousel-wrap" id="photoCarousel"></div>
 <div id="tree" class="tree-wrap"></div>
 <footer>Google Sheets is the single source of truth · Changes sync automatically · Ezie Family Tree v6.0</footer>
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
@@ -333,12 +352,42 @@ function renderT(u,parentPipes,isLast){
   const noteHtml=m.notes?`<div class="u-note"><span class="u-note-pipes">${esc(childPipes)}    </span>// ${esc(m.notes)}</div>`:'';
   return`<div class="u-block" data-level="${u.level}" data-id="${u.id}"><div class="u-row"><div class="u-connector">${esc(parentPipes)}${esc(connector)}</div><div class="u-body"><div class="u-card">${tBtn}<span class="member-name${m.isLate?' late':''}" style="color:${lvlColor}">${esc(dn(m))}${m.nickname?`<span class="member-nick"> "${esc(m.nickname)}"</span>`:''}</span>${dStr?`<span class="member-dates">${esc(dStr)}</span>`:''}<span class="u-actions"><button class="act-btn" onclick="editUnion(${u.id})">[edit]</button><button class="act-btn" onclick="addChild(${u.id})">[+child]</button>${u.spouses.length?`<button class="act-btn" onclick="addSpouse(${u.id})">[+spouse]</button>`:''}<button class="act-btn del" onclick="deleteUnion(${u.id})">[del]</button></span></div>${spHtml}${noteHtml}</div></div>${hasC?`<div class="u-children" id="${tid}">${u.children.map((c,i)=>renderT(c,childPipes,i===u.children.length-1)).join('')}</div>`:''}</div>`;
 }
+// ── PHOTO CAROUSEL ──
+function collectPhotos(arr, out){
+  if(!arr)return;
+  arr.forEach(u=>{
+    if(u.member&&u.member.photoUrl)out.push({url:u.member.photoUrl,name:dn(u.member)});
+    if(u.children)collectPhotos(u.children,out);
+  });
+}
+function buildCarousel(){
+  const wrap=document.getElementById('photoCarousel');
+  if(!wrap)return;
+  // Collect all members with photos
+  const photos=[];
+  collectPhotos(familyData,photos);
+  if(photos.length===0){wrap.innerHTML='';return;}
+  // Fisher-Yates shuffle for randomised order
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const shuffled=shuffle([...photos]);
+  // Duplicate the shuffled list so the seamless loop works:
+  // We translate by exactly -50% of total track width (one full set)
+  const doubled=[...shuffled,...shuffled];
+  const avatarSize=window.innerWidth<=480?36:44;
+  const gap=8;
+  const totalOneSet=(avatarSize+gap)*shuffled.length;
+  // Speed: ~60px per second, min 4s, max 30s
+  const duration=Math.min(30,Math.max(4,Math.round(totalOneSet/60)));
+  const itemsHtml=doubled.map(p=>`<div class="carousel-avatar" title="${esc(p.name)}"><img src="${esc(p.url)}" alt="${esc(p.name)}" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`).join('');
+  wrap.innerHTML=`<div class="carousel-track" id="carouselTrack" style="--carousel-shift:-${totalOneSet}px;animation-duration:${duration}s">${itemsHtml}</div>`;
+}
 function renderTree(){
   const tree=document.getElementById('tree'),t=getTheme();
   const sec=[t==='terminal'?'UNION 1 \u2014 Marcus Anuebunwa Ezie & Christiania Mgbeojirikwe Nnaediekwe':'Union I \u2014 Marcus Anuebunwa Ezie & Christiania Mgbeojirikwe Nnaediekwe',t==='terminal'?'UNION 2 \u2014 Marcus Anuebunwa Ezie & Ukwudie Okoronkwo':'Union II \u2014 Marcus Anuebunwa Ezie & Ukwudie Okoronkwo'];
   let html='';
   familyData.forEach((u,i)=>{html+=`<div class="section-banner"><div class="banner-line"></div><div class="banner-text">${sec[i]||'Additional Family'}</div><div class="banner-line"></div></div>`;html+=t==='terminal'?renderT(u,'',true):renderM(u,true);});
   tree.innerHTML=html;
+  buildCarousel();
 }
 function tLabel(c){return getTheme()==='terminal'?(c?'[+]':'[-]'):(c?'+':'\u2212');}
 function toggle(cid,bid){const el=document.getElementById(cid),btn=document.getElementById(bid);if(!el)return;const c=el.classList.toggle('collapsed');if(btn)btn.textContent=tLabel(c);}
