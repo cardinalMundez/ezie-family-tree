@@ -207,23 +207,36 @@ footer{border-top:1px solid var(--border);padding:10px;margin-top:16px;color:var
 [data-theme="modern"] .member-avatar.has-photo{padding:0;overflow:hidden}
 [data-theme="modern"] .member-avatar.has-photo img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 /* ── PHOTO CAROUSEL ── */
-.carousel-wrap{overflow:hidden;border-bottom:1px solid var(--border);padding:7px 0;background:var(--bg2);position:relative}
+.carousel-wrap{overflow:hidden;border-bottom:1px solid var(--border);padding:7px 0;background:var(--bg2);position:relative;transition:padding .35s ease}
 [data-theme="terminal"] .carousel-wrap{background:var(--bg2);border-bottom:1px solid var(--border)}
 .carousel-wrap:empty{display:none}
-.carousel-track{display:flex;gap:8px;width:max-content;animation:carousel-slide linear infinite}
+.carousel-track{display:flex;gap:8px;width:max-content;animation:carousel-slide linear infinite;transition:gap .35s ease}
 @keyframes carousel-slide{0%{transform:translateX(0)}100%{transform:translateX(var(--carousel-shift))}}
-.carousel-wrap:hover .carousel-track{animation-play-state:paused}
-.carousel-avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid var(--border);transition:border-color .2s,transform .2s;cursor:default}
-.carousel-avatar:hover{border-color:var(--border-hi);transform:scale(1.13);z-index:2}
+/* hover-pause desktop only — never fires on touchscreens */
+@media(hover:hover){.carousel-wrap:hover .carousel-track{animation-play-state:paused}.carousel-avatar:hover{border-color:var(--border-hi);transform:scale(1.13);z-index:2}[data-theme="terminal"] .carousel-avatar:hover{border-color:var(--accent1);box-shadow:0 0 8px rgba(51,255,51,.35)}}
+.carousel-avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid var(--border);transition:width .35s ease,height .35s ease,border-color .2s,transform .2s;cursor:default}
 .carousel-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 [data-theme="terminal"] .carousel-avatar{border-radius:0;border-color:var(--border-hi)}
-[data-theme="terminal"] .carousel-avatar:hover{border-color:var(--accent1);box-shadow:0 0 8px rgba(51,255,51,.35)}
-.carousel-avatar[title]{position:relative}
 /* fade edges */
 .carousel-wrap::before,.carousel-wrap::after{content:'';position:absolute;top:0;bottom:0;width:32px;z-index:1;pointer-events:none}
 .carousel-wrap::before{left:0;background:linear-gradient(to right,var(--bg2),transparent)}
 .carousel-wrap::after{right:0;background:linear-gradient(to left,var(--bg2),transparent)}
-@media(max-width:480px){.carousel-avatar{width:36px;height:36px}}
+/* tap-to-expand hint — mobile only */
+@media(hover:none){
+  .carousel-wrap::after{width:52px;background:linear-gradient(to left,var(--bg2) 40%,transparent)}
+  .carousel-hint{display:block;position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--text-dim);font-family:var(--font);letter-spacing:.05em;pointer-events:none;z-index:2;white-space:nowrap;user-select:none}
+  [data-theme="terminal"] .carousel-hint{color:var(--border-hi)}
+}
+@media(hover:hover){.carousel-hint{display:none}}
+/* expanded state — triggered by JS on mobile tap */
+@media(hover:none){
+  .carousel-wrap.expanded{padding:10px 0}
+  .carousel-wrap.expanded .carousel-avatar{width:110px;height:110px}
+  [data-theme="terminal"] .carousel-wrap.expanded .carousel-avatar{border-radius:4px}
+  .carousel-wrap.expanded .carousel-track{gap:10px}
+}
+@media(max-width:480px){.carousel-avatar{width:36px;height:36px}
+  .carousel-wrap.expanded .carousel-avatar{width:110px;height:110px}}
 </style>
 </head>
 <body>
@@ -363,23 +376,42 @@ function collectPhotos(arr, out){
 function buildCarousel(){
   const wrap=document.getElementById('photoCarousel');
   if(!wrap)return;
-  // Collect all members with photos
   const photos=[];
   collectPhotos(familyData,photos);
   if(photos.length===0){wrap.innerHTML='';return;}
-  // Fisher-Yates shuffle for randomised order
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
   const shuffled=shuffle([...photos]);
-  // Duplicate the shuffled list so the seamless loop works:
-  // We translate by exactly -50% of total track width (one full set)
   const doubled=[...shuffled,...shuffled];
-  const avatarSize=window.innerWidth<=480?36:44;
-  const gap=8;
-  const totalOneSet=(avatarSize+gap)*shuffled.length;
-  // Speed: ~60px per second, min 4s, max 30s
-  const duration=Math.min(30,Math.max(4,Math.round(totalOneSet/60)));
+  function calcDuration(avatarSize,gap){
+    const totalOneSet=(avatarSize+gap)*shuffled.length;
+    return{totalOneSet,duration:Math.min(30,Math.max(4,Math.round(totalOneSet/60)))};
+  }
+  const isMobile=window.innerWidth<=480;
+  const baseSize=isMobile?36:44;
+  const {totalOneSet,duration}=calcDuration(baseSize,8);
   const itemsHtml=doubled.map(p=>`<div class="carousel-avatar" title="${esc(p.name)}"><img src="${esc(p.url)}" alt="${esc(p.name)}" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`).join('');
-  wrap.innerHTML=`<div class="carousel-track" id="carouselTrack" style="--carousel-shift:-${totalOneSet}px;animation-duration:${duration}s">${itemsHtml}</div>`;
+  // hint label — CSS hides it on desktop via @media(hover:hover)
+  const hintHtml=`<span class="carousel-hint" id="carouselHint">tap to expand</span>`;
+  wrap.innerHTML=`<div class="carousel-track" id="carouselTrack" style="--carousel-shift:-${totalOneSet}px;animation-duration:${duration}s">${itemsHtml}</div>${hintHtml}`;
+  function toggleExpand(e){
+    // ignore if it came from a child with its own handler
+    const expanded=wrap.classList.toggle('expanded');
+    const hint=document.getElementById('carouselHint');
+    const expandedSize=110,expandedGap=10;
+    const normalSize=isMobile?36:44,normalGap=8;
+    const {totalOneSet:newTotal,duration:newDur}=expanded
+      ?calcDuration(expandedSize,expandedGap)
+      :calcDuration(normalSize,normalGap);
+    const track=document.getElementById('carouselTrack');
+    if(track){
+      track.style.setProperty('--carousel-shift',`-${newTotal}px`);
+      track.style.animationDuration=newDur+'s';
+    }
+    if(hint)hint.textContent=expanded?'tap to collapse':'tap to expand';
+  }
+  // single onclick assignment — auto-replaces on every rebuild, no stacking,
+  // works in both themes including terminal's flickering body animation
+  wrap.onclick=toggleExpand;
 }
 function renderTree(){
   const tree=document.getElementById('tree'),t=getTheme();
